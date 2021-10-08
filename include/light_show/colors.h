@@ -13,12 +13,15 @@ struct ColorHSV;
 struct ColorRGB {
     ColorRGB(Pixel red_, Pixel green_, Pixel blue_) : red(red_), green(green_), blue(blue_) {}
     ColorRGB(ColorRGBRef other) : red(other.red), green(other.green), blue(other.blue) {}
-    void operator=(ColorRGBRef const& other) {
+    ColorRGB(ColorHSV hsv) : ColorRGB(hsv.toRGB()) {}
+
+    void operator=(ColorRGB const& other) {
         red = other.red;
         green = other.green;
         blue = other.blue;
     }
-    void operator=(ColorHSV const& other) { operator=(other.toRGB()); }
+    void operator=(ColorHSV const& hsv) { operator=(hsv.toRGB()); }
+
     Pixel max() const { return std::max({red, green, blue}); }
     Pixel min() const { return std::min({red, green, blue}); }
 
@@ -110,6 +113,13 @@ struct ColorHSV {
             abort();
         }
     }
+
+    void operator=(ColorHSV const& other) {
+        hue = other.hue;
+        saturation = other.saturation;
+        value = other.value;
+    }
+    void operator=(ColorRGB const& other) { operator=(ColorHSV(other)); }
 
     float hue;
     float saturation;

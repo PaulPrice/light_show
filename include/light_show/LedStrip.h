@@ -5,6 +5,7 @@
 #include "ndarray/Vector.h"
 
 #include "light_show/config.h"
+#include "light_show/indexing.h"
 #include "light_show/colors.h"
 #include "light_show/iterator.h"
 
@@ -47,8 +48,8 @@ class LedStrip final {
     Array & getBlue() { return _blue; }
     Array const& getBlue() const { return _blue; }
 
-    void set(int index, ColorRGB rgb) { operator[](index) = rgb; }
-    void set(int index, ColorHSV hsv) { operator[](index) = hsv.toRGB(); }
+    void set(int index, ColorRGB const& rgb) { operator[](index) = rgb; }
+    void set(int index, ColorHSV const& hsv) { operator[](index) = hsv.toRGB(); }
     void set(int index, Pixel red, Pixel green, Pixel blue) {
         operator[](index) = ColorRGB(red, green, blue);
     }
@@ -61,15 +62,11 @@ class LedStrip final {
     }
 
     ColorRGB operator[](int index) const {
-        if (index < 0) {
-            index += _num;
-        }
+        index = checkIndex(index, _num);
         return ColorRGB(_red[index], _green[index], _blue[index]);
     }
     ColorRGBRef operator[](int index) {
-        if (index < 0) {
-            index += _num;
-        }
+        index = checkIndex(index, _num);
         return ColorRGBRef(_red[index], _green[index], _blue[index]);
     }
 

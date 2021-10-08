@@ -4,6 +4,7 @@
 #include <string>
 #include <stdexcept>
 #include "light_show/config.h"
+#include "light_show/indexing.h"
 #include "light_show/LedStrip.h"
 
 extern "C" {
@@ -30,6 +31,7 @@ enum StripType {
 
 
 class Ws2811Exception : std::runtime_error {
+  public:
     Ws2811Exception(ws2811_return_t code) : std::runtime_error(ws2811_get_return_t_str(code)) {}
     Ws2811Exception(std::string const& descr, ws2811_return_t code
         ) : std::runtime_error(descr + ": " + ws2811_get_return_t_str(code)) {}
@@ -75,28 +77,25 @@ class LedController final {
 
     int size() { return _channels.size(); }
 
-    LedStrip & operator[](int index) const {
-        if (index < 0) {
-            index += _channels.size();
-        }
-        if (index < 0 || index >= _channels.size()) {
-            throw std::out_of_range("Index out of range");
-        }
-        return _channels[ii];
+    LedStrip const& operator[](int index) const {
+        return _channels[checkIndex(index, _channels.size())];
+    }
+    LedStrip & operator[](int index) {
+        return _channels[checkIndex(index, _channels.size())];
     }
 
   private:
 
-    void _execute(void(ws2811_t*) func, char const* name) {
-        ws2811_return_t code = func(&_leds);
+    void _execute(std::function<ws2811_return_t(ws2811_t*)> func, char const* name) const {
+        ws2811_return_t code = func(const_cast<ws2811_t*>(&_leds));
         if (code != WS2811_SUCCESS) {
             throw Ws2811Exception(std::string(name), code);
         }
     }
 
-    explicit LedController(unsigned int dma=10) {
+    LedController(unsigned int dma=10) {
         _leds.freq = WS2811_TARGET_FREQ;
-        _leds.dma = dma;
+        _leds.dmanum = dma;
     }
 
     void _setChannel(int index, int gpio, int num, StripType type) {
