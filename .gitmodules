@@ -1,0 +1,6 @@
+[submodule "rpi_ws281x"]
+	path = rpi_ws281x
+	url = https://github.com/jgarff/rpi_ws281x.git
+[submodule "ndarray"]
+	path = ndarray
+	url = https://github.com/ndarray/ndarray.git
