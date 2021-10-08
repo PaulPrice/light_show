@@ -1,8 +1,14 @@
 #ifndef LIGHT_SHOW_LEDCONTROLLER_H
 #define LIGHT_SHOW_LEDCONTROLLER_H
 
+#include <string>
+#include <stdexcept>
 #include "light_show/config.h"
+#include "light_show/LedStrip.h"
 
+extern "C" {
+#include "ws2811.h"
+}
 
 namespace light_show {
 
@@ -27,12 +33,12 @@ class Ws2811Exception : std::runtime_error {
     Ws2811Exception(ws2811_return_t code) : std::runtime_error(ws2811_get_return_t_str(code)) {}
     Ws2811Exception(std::string const& descr, ws2811_return_t code
         ) : std::runtime_error(descr + ": " + ws2811_get_return_t_str(code)) {}
-}
+};
 
 
 class LedController final {
   public:
-    LedController(int gpio, std::size_t num, StripType type, unsigned dma=10
+    LedController(int gpio, int num, StripType type, unsigned int dma=10
         ) : LedController(dma) {
         _setChannel(0, gpio, num, type);
         _start(1);
@@ -40,7 +46,7 @@ class LedController final {
 
     LedController(
         ndarray::Array<int, 1, 1> const& gpio,
-        ndarray::Array<std::size_t, 1, 1> const& num,
+        ndarray::Array<int, 1, 1> const& num,
         ndarray::Array<StripType, 1, 1> const& types,
         unsigned int dma=10
     ) : LedController(dma) {
@@ -88,13 +94,16 @@ class LedController final {
         }
     }
 
-    explicit LedController(unsigned dma=10) {
+    explicit LedController(unsigned int dma=10) {
         _leds.freq = WS2811_TARGET_FREQ;
         _leds.dma = dma;
     }
 
-    void _setChannel(int index, int gpio, std::size_t num, StripType type) {
+    void _setChannel(int index, int gpio, int num, StripType type) {
         assert(index >= 0 && index < RPI_PWM_CHANNELS);
+        if (num < 0) {
+            throw std::length_error("Negative length specified");
+        }
         _leds.channel[index].gpionum = gpio;
         _leds.channel[index].count = num;
         _leds.channel[index].brightness = 255;

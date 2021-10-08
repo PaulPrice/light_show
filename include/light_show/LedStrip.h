@@ -1,8 +1,12 @@
 #ifndef LIGHT_SHOW_LEDSTRIP_H
 #define LIGHT_SHOW_LEDSTRIP_H
 
+#include "ndarray.h"
+#include "ndarray/Vector.h"
+
 #include "light_show/config.h"
 #include "light_show/colors.h"
+#include "light_show/iterator.h"
 
 namespace light_show {
 
@@ -10,15 +14,17 @@ namespace light_show {
 class LedStrip final {
   public:
     using Array = ndarray::Array<Pixel, 1, 1>;
+    using iterator = Iterator<LedStrip, ColorRGB, ColorRGBRef, int>;
+    using const_iterator = Iterator<LedStrip const, ColorRGB const, ColorRGBRef const, int>;
 
-    LedStrip(int num, ws2811_led_t * data
+    LedStrip(int num, ColorPixel * data
         ) : _num(num), _data(data) {
         auto const shape = ndarray::makeVector(num);
         auto const stride = ndarray::makeVector(4);
         _blue = ndarray::external(data + 0, shape, stride);
         _green = ndarray::external(data + 1, shape, stride);
         _red = ndarray::external(data + 2, shape, stride);
-        off();
+        clear();
     }
 
     ~LedStrip() {}
@@ -27,34 +33,13 @@ class LedStrip final {
     LedStrip & operator=(LedStrip const&) = default;
     LedStrip & operator=(LedStrip &&) = default;
 
-    struct Iterator {
-        using iterator_category = std::random_access_iterator_tag;
-        using difference_type = int;
-        using value_type = RGB;
-        using pointer = RGB;
-        using reference = RGBRef;
+    iterator begin() { return iterator(*this, 0); }
+    const_iterator begin() const { return const_iterator(*this, 0); }
+    iterator end() { return iterator(*this, _num); }
+    const_iterator end() const { return const_iterator(*this, _num); }
 
-        Iterator(LedStrip & strip_, int index_) : strip(strip_), index(index) {}
-        reference operator*() const { return strip[index]; }
-        pointer operator->() { return strip[index]; }
-
-        // Prefix increment
-        Iterator& operator++() { ++index; return *this; }
-
-        // Postfix increment
-        Iterator operator++(int) { Iterator tmp = *this; ++index; return tmp; }
-
-        friend bool operator==(const Iterator& a, const Iterator& b) { return a.index == b.index; };
-        friend bool operator!=(const Iterator& a, const Iterator& b) { return a.index != b.index; };
-
-        LedStrip & strip;
-        int index;
-    };
-    Iterator begin() { return Iterator(*this, 0); }
-    Iterator end() { return Iterator(*this, _num); }
-
-    RGB get(int index) const { return operator[](index); }
-    RGBRef get(int index) { return operator[](index); }
+    ColorRGB get(int index) const { return operator[](index); }
+    ColorRGBRef get(int index) { return operator[](index); }
     Array & getRed() { return _red; }
     Array const& getRed() const { return _red; }
     Array & getGreen() { return _green; }
@@ -62,10 +47,10 @@ class LedStrip final {
     Array & getBlue() { return _blue; }
     Array const& getBlue() const { return _blue; }
 
-    void set(int index, RGB rgb) { operator[](index) = rgb; }
-    void set(int index, HSV hsv) { operator[](index) = hsv.toRGB(); }
+    void set(int index, ColorRGB rgb) { operator[](index) = rgb; }
+    void set(int index, ColorHSV hsv) { operator[](index) = hsv.toRGB(); }
     void set(int index, Pixel red, Pixel green, Pixel blue) {
-        operator[](index) = RGB(red, green, blue);
+        operator[](index) = ColorRGB(red, green, blue);
     }
     void setRed(Array const& array) { _red.deep() = array; }
     void setGreen(Array const& array) { _green.deep() = array; }
@@ -75,17 +60,17 @@ class LedStrip final {
         return _num;
     }
 
-    RGB operator[](int index) const {
+    ColorRGB operator[](int index) const {
         if (index < 0) {
             index += _num;
         }
-        return RGB(_red[index], _green[index], _blue[index]);
+        return ColorRGB(_red[index], _green[index], _blue[index]);
     }
-    RGBRef operator[](int index) {
+    ColorRGBRef operator[](int index) {
         if (index < 0) {
             index += _num;
         }
-        return RGBRef(_red[index], _green[index], _blue[index]);
+        return ColorRGBRef(_red[index], _green[index], _blue[index]);
     }
 
     bool isOn() const {
@@ -96,9 +81,9 @@ class LedStrip final {
     }
 
     void fill(Pixel red, Pixel green, Pixel blue) {
-        fill(RGB(red, green, blue));
+        fill(ColorRGB(red, green, blue));
     }
-    void fill(RGB const& rgb) {
+    void fill(ColorRGB const& rgb) {
         _red.deep() = rgb.red;
         _green.deep() = rgb.green;
         _blue.deep() = rgb.blue;
@@ -109,7 +94,7 @@ class LedStrip final {
     }
 
     ndarray::Array<float, 1, 1> brightness() const {
-        ndarray::Array<float, 1, 1> brightess = ndarray::allocate(_num);
+        ndarray::Array<float, 1, 1> brightness = ndarray::allocate(_num);
         for (int ii = 0; ii < _num; ++ii) {
             brightness[ii] = std::max({_red[ii], _green[ii], _blue[ii]})/255.0;
         }
@@ -117,11 +102,11 @@ class LedStrip final {
     }
 
     // HSV
-    HSV getHSV(int index) const { return HSV(operator[](index)); }
+    ColorHSV getHSV(int index) const { return ColorHSV(operator[](index)); }
     ndarray::Array<float, 2, 1> getHSV() const {
-        ndarray::Array<Pixel, 2, 1> result = ndarray::allocate(_num, 3);
-        for (Iterator iter = begin(); iter != end(); ++iter) {
-            HSV hsv{*iter};
+        ndarray::Array<float, 2, 1> result = ndarray::allocate(_num, 3);
+        for (int ii = 0; ii < _num; ++ii) {
+            ColorHSV hsv{operator[](ii)};
             result[ii][0] = hsv.hue;
             result[ii][1] = hsv.saturation;
             result[ii][2] = hsv.value;
@@ -136,7 +121,7 @@ class LedStrip final {
             throw std::length_error("Incorrect width");
         }
         for (int ii = 0; ii < _num; ++ii) {
-            operator[](ii) = HSV(hsv[ii][0], hsv[ii][1], hsv[ii][2]).toRGB();
+            operator[](ii) = ColorHSV(hsv[ii][0], hsv[ii][1], hsv[ii][2]).toRGB();
         }
     }
     void setHSV(
@@ -148,7 +133,7 @@ class LedStrip final {
             throw std::length_error("Incorrect length");
         }
         for (int ii = 0; ii < _num; ++ii) {
-            operator[](ii) = HSV(hue[ii], saturation[ii], value[ii]).toRGB();
+            operator[](ii) = ColorHSV(hue[ii], saturation[ii], value[ii]).toRGB();
         }
     }
 
