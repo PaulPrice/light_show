@@ -1,0 +1,47 @@
+Use "Raspberry Pi Imager" application to write a Raspbian image.
+
+price@PU-C02F30LBMD6V:/Volumes/boot $ touch ssh
+price@PU-C02F30LBMD6V:/Volumes/boot $ cp ~/Software/HolidayLights/raspberrypi/wpa_supplicant.conf .
+
+Start the RPi.
+
+price@PU-C02F30LBMD6V:~ $ ping raspberrypi.local
+price@PU-C02F30LBMD6V:~ $ slogin pi@raspberrypi.local
+
+Default p/w is "raspberry".
+
+Set up key-based access:
+
+price@PU-C02F30LBMD6V:~ $ ssh-copy-id pi@raspberrypi.local
+price@PU-C02F30LBMD6V:~ $ slogin pi@raspberrypi.local
+
+To disable p/w access, edit /etc/ssh/sshd_config to include:
+
+PasswordAuthentication no
+
+Change your p/w ("passwd"). The annoying message about changing your p/w should go away after a reboot (or rm /run/sshwarn).
+
+Install the LED strip driver python interface:
+
+pip3 install --user rpi_ws281x
+
+I don't want to use that python wrapper.
+
+Get important build tools:
+
+pi@raspberrypi:~/Software $ sudo apt-get update
+pi@raspberrypi:~/Software $ sudo apt-get install scons cmake
+
+Build the base LED driver:
+
+pi@raspberrypi:~/Software $ git clone https://github.com/jgarff/rpi_ws281x.git
+pi@raspberrypi:~/Software/rpi_ws281x $ mkdir build
+pi@raspberrypi:~/Software/rpi_ws281x $ cd build/
+pi@raspberrypi:~/Software/rpi_ws281x/build $ cmake -D BUILD_SHARED=ON -D BUILD_TEST=OFF ..
+pi@raspberrypi:~/Software/rpi_ws281x/build $ make
+
+
+pi@raspberrypi:~ $ pip3 install --user pybind11
+
+Might want to add to PATH: ~/.local/bin
+
