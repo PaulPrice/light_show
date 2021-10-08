@@ -46,12 +46,10 @@ void declareLedController(py::module &mod) {
 }
 
 
-PYBIND11_PLUGIN(LedController) {
-    py::module mod("LedController");
+PYBIND11_MODULE(LedController, mod) {
     py::register_exception<Ws2811Exception>(mod, "Ws2811Exception", PyExc_RuntimeError);
     declareStripType(mod);
     declareLedController(mod);
-    return mod.ptr();
 }
 
 }  // anonymous namespace

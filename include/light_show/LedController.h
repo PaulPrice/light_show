@@ -30,7 +30,7 @@ enum StripType {
 };
 
 
-class Ws2811Exception : std::runtime_error {
+class Ws2811Exception : public std::runtime_error {
   public:
     Ws2811Exception(ws2811_return_t code) : std::runtime_error(ws2811_get_return_t_str(code)) {}
     Ws2811Exception(std::string const& descr, ws2811_return_t code

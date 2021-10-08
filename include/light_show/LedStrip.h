@@ -22,9 +22,10 @@ class LedStrip final {
         ) : _num(num), _data(data) {
         auto const shape = ndarray::makeVector(num);
         auto const stride = ndarray::makeVector(4);
-        _blue = ndarray::external(data + 0, shape, stride);
-        _green = ndarray::external(data + 1, shape, stride);
-        _red = ndarray::external(data + 2, shape, stride);
+        Pixel * pixels = reinterpret_cast<Pixel*>(data);
+        _blue = ndarray::external(pixels + 0, shape, stride);
+        _green = ndarray::external(pixels, shape, stride);
+        _red = ndarray::external(pixels + 2, shape, stride);
         clear();
     }
 

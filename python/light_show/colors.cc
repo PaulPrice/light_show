@@ -29,28 +29,31 @@ void declareColorRGBRef(py::module &mod) {
     cls.def("set", py::overload_cast<ColorRGB const&>(&ColorRGBRef::operator=), "other"_a);
     cls.def("set", py::overload_cast<ColorRGBRef const&>(&ColorRGBRef::operator=), "other"_a);
     cls.def("set", py::overload_cast<ColorHSV const&>(&ColorRGBRef::operator=), "hsv"_a);
-    cls.def_readwrite("red", &ColorRGB::red);
-    cls.def_readwrite("green", &ColorRGB::green);
-    cls.def_readwrite("blue", &ColorRGB::blue);
+    cls.def_property("red", [](ColorRGBRef const& self) { return self.red; },
+                     [](ColorRGBRef & self, Pixel red) { self.red = red; });
+    cls.def_property("green", [](ColorRGBRef const& self) { return self.green; },
+                     [](ColorRGBRef & self, Pixel green) { self.green = green; });
+    cls.def_property("blue", [](ColorRGBRef const& self) { return self.blue; },
+                     [](ColorRGBRef & self, Pixel blue) { self.blue = blue; });
 }
 
 
 void declareColorHSV(py::module &mod) {
-    py::class_<ColorRGB> cls(mod, "ColorHSV");
+    py::class_<ColorHSV> cls(mod, "ColorHSV");
     cls.def(py::init<float, float, float>(), "hue"_a, "saturation"_a, "value"_a);
     cls.def(py::init<ColorRGB>());
     cls.def(py::init<ColorRGBRef>());
     cls.def(py::init<ColorHSV>());
     cls.def("set", py::overload_cast<ColorRGB const&>(&ColorHSV::operator=), "rgb"_a);
     cls.def("set", py::overload_cast<ColorHSV const&>(&ColorHSV::operator=), "other"_a);
-    cls.def_readwrite("red", &ColorRGB::red);
-    cls.def_readwrite("green", &ColorRGB::green);
-    cls.def_readwrite("blue", &ColorRGB::blue);
+    cls.def_readwrite("hue", &ColorHSV::hue);
+    cls.def_readwrite("saturation", &ColorHSV::saturation);
+    cls.def_readwrite("sat", &ColorHSV::saturation);
+    cls.def_readwrite("value", &ColorHSV::value);
 }
 
 
-PYBIND11_PLUGIN(colors) {
-    py::module mod("colors");
+PYBIND11_MODULE(colors, mod) {
     declareColorRGB(mod);
     declareColorRGBRef(mod);
     declareColorHSV(mod);
@@ -69,7 +72,6 @@ PYBIND11_PLUGIN(colors) {
     py::globals()["AQUA"] = py::cast(AQUA);
     py::globals()["CRIMSON"] = py::cast(CRIMSON);
     py::globals()["GOLD"] = py::cast(GOLD);
-    return mod.ptr();
 }
 
 }  // anonymous namespace

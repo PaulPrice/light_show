@@ -12,15 +12,15 @@ struct ColorHSV;
 
 struct ColorRGB {
     ColorRGB(Pixel red_, Pixel green_, Pixel blue_) : red(red_), green(green_), blue(blue_) {}
-    ColorRGB(ColorRGBRef other) : red(other.red), green(other.green), blue(other.blue) {}
-    ColorRGB(ColorHSV hsv) : ColorRGB(hsv.toRGB()) {}
+    ColorRGB(ColorRGBRef other);
+    ColorRGB(ColorHSV hsv);
 
     void operator=(ColorRGB const& other) {
         red = other.red;
         green = other.green;
         blue = other.blue;
     }
-    void operator=(ColorHSV const& hsv) { operator=(hsv.toRGB()); }
+    void operator=(ColorHSV const& hsv);
 
     Pixel max() const { return std::max({red, green, blue}); }
     Pixel min() const { return std::min({red, green, blue}); }
@@ -43,11 +43,13 @@ struct ColorRGBRef {
         green = other.green;
         blue = other.blue;
     }
-    void operator=(ColorHSV const& other) { operator=(other.toRGB()); }
+    void operator=(ColorHSV const& other);
     Pixel & red;
     Pixel & green;
     Pixel & blue;
 };
+
+
 
 
 ColorRGB const WHITE{255, 255, 255};
@@ -126,6 +128,19 @@ struct ColorHSV {
     float value;
 };
 
+
+
+inline
+ColorRGB::ColorRGB(ColorRGBRef other) : red(other.red), green(other.green), blue(other.blue) {}
+
+inline
+ColorRGB::ColorRGB(ColorHSV hsv) : ColorRGB(hsv.toRGB()) {}
+
+inline
+void ColorRGB::operator=(ColorHSV const& hsv) { operator=(hsv.toRGB()); }
+
+inline
+void ColorRGBRef::operator=(ColorHSV const& other) { operator=(other.toRGB()); }
 
 }  // namespace light_show
 

@@ -32,7 +32,7 @@ Get important build tools:
 pi@raspberrypi:~/Software $ sudo apt-get update
 pi@raspberrypi:~/Software $ sudo apt-get install scons cmake
 
-Build the base LED driver:
+Build the base LED driver to make sure there's no issues:
 
 pi@raspberrypi:~/Software $ git clone https://github.com/jgarff/rpi_ws281x.git
 pi@raspberrypi:~/Software/rpi_ws281x $ mkdir build
@@ -41,7 +41,14 @@ pi@raspberrypi:~/Software/rpi_ws281x/build $ cmake -D BUILD_SHARED=ON -D BUILD_T
 pi@raspberrypi:~/Software/rpi_ws281x/build $ make
 
 
+Install some prereqs:
+
 pi@raspberrypi:~ $ pip3 install --user pybind11
+pi@raspberrypi:~ $ apt-get install fftw boost
 
 Might want to add to PATH: ~/.local/bin
 
+
+
+
+price@PU-C02F30LBMD6V:~/Software/light_show/build (price/20211008 *%) $ pybind11_DIR=$HOME/Library/Python/3.9/lib/python/site-packages/pybind11/share/cmake/pybind11 cmake ..

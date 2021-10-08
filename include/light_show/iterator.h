@@ -11,7 +11,7 @@ struct Iterator {
     // using pointer = ValueT*;
     using reference = ReferenceT;
 
-    Iterator(ContainerT & container_, int index_) : container(container_), index(index) {}
+    Iterator(ContainerT & container_, int index_) : container(container_), index(index_) {}
     reference operator*() const { return container[index]; }
     // pointer operator->() { return container[index]; }
 
@@ -21,7 +21,7 @@ struct Iterator {
     friend bool operator==(const Iterator& a, const Iterator& b) { return a.index == b.index; };
     friend bool operator!=(const Iterator& a, const Iterator& b) { return a.index != b.index; };
 
-    ContainerT & strip;
+    ContainerT & container;
     IndexT index;
 };
 

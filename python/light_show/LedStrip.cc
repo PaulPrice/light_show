@@ -42,10 +42,8 @@ void declareLedStrip(py::module &mod) {
 }
 
 
-PYBIND11_PLUGIN(LedStrip) {
-    py::module mod("LedStrip");
+PYBIND11_MODULE(LedStrip, mod) {
     declareLedStrip(mod);
-    return mod.ptr();
 }
 
 }  // anonymous namespace
