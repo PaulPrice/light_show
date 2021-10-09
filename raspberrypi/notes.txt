@@ -49,6 +49,17 @@ pi@raspberrypi:~ $ apt-get install fftw boost
 Might want to add to PATH: ~/.local/bin
 
 
+Install with cmake:
 
-
+price@PU-C02F30LBMD6V:~/Software/light_show (price/20211008 *%) $ mkdir build && cd build
 price@PU-C02F30LBMD6V:~/Software/light_show/build (price/20211008 *%) $ pybind11_DIR=$HOME/Library/Python/3.9/lib/python/site-packages/pybind11/share/cmake/pybind11 cmake ..
+price@PU-C02F30LBMD6V:~/Software/light_show/build (price/20211008 *%) $ make install
+
+Install with setup.py:
+
+price@PU-C02F30LBMD6V:~/Software/light_show (price/20211008 *%) $ rm -r install/price@PU-C02F30LBMD6V:~/Software/light_show (price/20211008 *) $ pybind11_DIR=$HOME/Library/Python/3.9/lib/python/site-packages/pybind11/share/cmake/pybind11 python3 setup.py install --prefix=$HOME/Software/light_show/install
+
+
+After either, we can now run it:
+
+price@PU-C02F30LBMD6V:~/Software/light_show (price/20211008 *%) $ PYTHON_PATH+=$HOME/Software/light_show/install python3

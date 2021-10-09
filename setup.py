@@ -17,15 +17,6 @@ class CMakeExtension(Extension):
 
 
 class CMakeBuild(build_ext):
-    user_options = build_ext.user_options + [
-        ("no-raspberry-pi", None, "don't build Raspberry Pi support"),
-    ]
-    boolean_options = build_ext.boolean_options + ["no-raspberry-pi"]
-
-    def initialize_options(self):
-        super().initialize_options()
-        self.no_raspberry_pi = False
-
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
 
@@ -46,10 +37,6 @@ class CMakeBuild(build_ext):
             "-DPYTHON_EXECUTABLE={}".format(sys.executable),
             "-DCMAKE_BUILD_TYPE={}".format(cfg),  # not used on MSVC, but no harm
         ]
-        if self.no_raspberry_pi:
-            cmake_args += [
-                "-DRASPBERRY_PI=OFF",
-            ]
 
         build_args = []
         # Adding CMake arguments set as environment variable
@@ -123,6 +110,8 @@ setup(
     author_email="price@astro.princeton.edu",
     description="Light show by LEDs on a Raspberry Pi",
     long_description="",
+    package_dir={"": "python/light_show"},
+    packages=[""],
     ext_modules=[CMakeExtension("light_show")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
