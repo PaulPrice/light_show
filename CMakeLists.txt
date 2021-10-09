@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.4...3.18)
-project(light_show VERSION 0.0.0 LANGUAGES CXX)
+project(light_show VERSION 0.0.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-O2")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
-set(NDARRAY_FFTW OFF)
-set(NDARRAY_PYBIND11 ON)
-
-option(RASPBERRY_PI "Build for Raspberry Pi?" ON)
+include(CheckIncludeFile)
+CHECK_INCLUDE_FILE(/opt/vc/include/bcm_host.h RASPBERRY_PI)
 if(RASPBERRY_PI)
     set(BUILD_SHARED ON CACHE BOOL "enable shared library")
     set(BUILD_TEST OFF CACHE BOOL "disable test")
     add_subdirectory(rpi_ws281x)
 endif(RASPBERRY_PI)
 
-find_package(pybind11)
+find_package(pybind11 CONFIG REQUIRED)
 find_package(Boost)
 find_package(eigen3)
 
@@ -22,23 +22,17 @@ include_directories(${PROJECT_SOURCE_DIR}/include
                     ${EIGEN3_INCLUDE_DIRS}
                     )
 
+option(NDARRAY_FFTW "Enable FFTW tests in ndarray?" OFF)
+option(NDARRAY_PYBIND11 "Enable Pybind11 tests in ndarray?" ON)
 add_subdirectory(ndarray)
 
-pybind11_add_module(light_show python/light_show/colors.cc
-                               python/light_show/LedController.cc
-                               python/light_show/LedStrip.cc
-                    )
-target_compile_definitions(light_show PRIVATE VERSION_INFO=${VERSION_INFO})
+foreach(PYMOD LedController colors LedStrip)
+    pybind11_add_module(${PYMOD} SHARED python/light_show/${PYMOD}.cc)
+    target_link_libraries(${PYMOD} PUBLIC pybind11::module)
+    set_target_properties(${PYMOD} PROPERTIES PREFIX "" SUFFIX ".so")
+    install(TARGETS ${PYMOD} COMPONENT PYTHON LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/python/light_show)
+endforeach()
 
 include(GNUInstallDirs)
-
-install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-config
-        LIBRARY DESTINATION lib
-        )
-install(EXPORT ${PROJECT_NAME}-config
-        NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/${PROJECT_NAME}
-        )
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        )
+install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY python DESTINATION ${CMAKE_INSTALL_PREFIX})
