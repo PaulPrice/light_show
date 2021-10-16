@@ -6,6 +6,7 @@
 #include "light_show/config.h"
 #include "light_show/indexing.h"
 #include "light_show/LedStrip.h"
+#include "light_show/LedStripSet.h"
 
 extern "C" {
 #include "ws2811.h"
@@ -82,6 +83,10 @@ class LedController final {
     }
     LedStrip & operator[](int index) {
         return _channels[checkIndex(index, _channels.size())];
+    }
+
+    LedStripSet getAll() {
+        return LedStripSet(_channels);
     }
 
   private:
