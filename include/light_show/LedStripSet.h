@@ -25,24 +25,29 @@ auto transform(Container const& container, UnaryFunction func) {
 }  // anonymous namespace
 
 class LedStripSet final {
-    template <typename ArrayIterator>
+  public:
+    using Collection = std::vector<LedStrip>;
+    using Array = ConcatenatedArrays<Pixel>;
+
+  private:
+    template <typename ArrayIterator, typename ReferenceT>
     class LedStripSetIterator {
       public:
         using iterator_category = std::random_access_iterator_tag;
-        using difference_type = ArrayIterator::difference_type;
+        using difference_type = typename ArrayIterator::difference_type;
         using value_type = ColorRGB;
-        using reference = ColorRGBRef;
+        using reference = ReferenceT;
 
         LedStripSetIterator(ArrayIterator red, ArrayIterator green, ArrayIterator blue)
           : _red(red), _green(green), _blue(blue) {}
-        reference operator*() const { return ColorRGBRef(*_red, *_green, *_blue); }
+        reference operator*() const { return ReferenceT(*_red, *_green, *_blue); }
         LedStripSetIterator& operator++() {
             ++_red;
             ++_green;
             ++_blue;
             return *this;
         }
-        LedStripSetIterator operator++(int) { Iterator tmp = *this; ++index; return tmp; }
+        LedStripSetIterator operator++(int) { Iterator tmp = *this; ++*this; return tmp; }
 
         friend bool operator==(const LedStripSetIterator& lhs, const LedStripSetIterator& rhs) {
             return lhs._red == rhs._red && lhs._green == rhs._green && lhs._blue == rhs._blue;
@@ -52,25 +57,26 @@ class LedStripSet final {
         }
 
       private:
-        Array::iterator _red;
-        Array::iterator _green;
-        Array::iterator _blue;
+        ArrayIterator _red;
+        ArrayIterator _green;
+        ArrayIterator _blue;
     };
 
   public:
-    using Collection = std::vector<LedStrip>;
-    using Array = ConcatenatedArrays<Pixel>;
-    using iterator = LedStripSetIterator<Array::iterator>;
-    using const_iterator = LedStripSetIterator<Array::const_iterator>;
+    using iterator = LedStripSetIterator<Array::iterator, ColorRGBRef>;
+    using const_iterator = LedStripSetIterator<Array::const_iterator, ColorRGB>;
 
     LedStripSet(Collection & strips)
       : _strips(strips),
         _numPixels(std::accumulate(strips.begin(), strips.end(), 0UL,
                                    [](std::size_t num, auto const& ss) { return num + ss.size(); })),
         _numStrips(strips.size()),
-        _red(transform(strips, [](LedStrip const& strip) { return strip.getRed(); })),
-        _green(transform(strips, [](LedStrip const& strip) { return strip.getGreen(); })),
-        _blue(transform(strips, [](LedStrip const& strip) { return strip.getBlue(); })) {
+        _red(transform(strips, [](LedStrip const& strip) {
+            return Array::Array(strip.getRed().deep()); })),
+        _green(transform(strips, [&](LedStrip const& strip) {
+            return Array::Array(strip.getGreen().deep()); })),
+        _blue(transform(strips, [&](LedStrip const& strip) {
+            return Array::Array(strip.getBlue().deep()); })) {
             if (strips.size() == 0) {
                 throw std::runtime_error("No strips provided");
             }

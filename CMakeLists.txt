@@ -26,7 +26,7 @@ option(NDARRAY_FFTW "Enable FFTW tests in ndarray?" OFF)
 option(NDARRAY_PYBIND11 "Enable Pybind11 tests in ndarray?" ON)
 add_subdirectory(ndarray)
 
-foreach(PYMOD LedController colors LedStrip)
+foreach(PYMOD LedController colors LedStrip ConcatenatedArrays)
     pybind11_add_module(${PYMOD} SHARED python/light_show/${PYMOD}.cc)
     target_link_libraries(${PYMOD} PUBLIC pybind11::module)
     set_target_properties(${PYMOD} PROPERTIES PREFIX "" SUFFIX ".so")

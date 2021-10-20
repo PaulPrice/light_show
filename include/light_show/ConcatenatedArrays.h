@@ -1,6 +1,7 @@
-#ifndef LIGHT_SHOW_ARRAYSET_H
-#define LIGHT_SHOW_ARRAYSET_H
+#ifndef LIGHT_SHOW_CONCATENATEDARRAYS_H
+#define LIGHT_SHOW_CONCATENATEDARRAYS_H
 
+#include <utility>
 #include <exception>
 #include <numeric>
 
@@ -10,6 +11,8 @@
 
 namespace light_show {
 
+
+template <typename T> class ConcatenatedArraysRef;
 
 template <typename T>
 class ConcatenatedArrays {
@@ -21,28 +24,34 @@ class ConcatenatedArrays {
         using value_type = ValueT;
         using reference = ReferenceT;
 
-        Iterator(ParentT & parent, IndexT index) : _parent(parent) {
-            std::tie(_array, _pixel) = parent.getIndices(index);
-        }
+        Iterator(ParentT & parent, IndexT index) : Iterator(parent, parent.getIndices(index)) {}
         Iterator(ParentT & parent, IndexT array, IndexT pixel)
           : _parent(parent), _array(array), _pixel(pixel) {}
-        reference operator*() const { return parent._arrays[_array][_index]; }
+        Iterator(ParentT & parent, std::pair<IndexT, IndexT> const& indices)
+          : Iterator(parent, indices.first, indices.second) {}
+        reference operator*() const { return _parent._arrays[_array][_pixel]; }
 
         Iterator& operator++() {
             ++_pixel;
-            if (_pixel >= parent._cumulativeCounts[_array]) {
+            if (_pixel >= _parent._cumulativeCounts[_array]) {
                 ++_array;
-                _pixel = 0;
             }
             return *this;
         }
-        Iterator operator++(int) { Iterator tmp = *this; ++index; return tmp; }
+        Iterator operator++(int) { Iterator tmp = *this; ++*this; return tmp; }
+
+        Iterator operator+(difference_type offset) const {
+            return Iterator(_parent, _pixel + offset);
+        }
+        Iterator operator-(difference_type offset) const {
+            return Iterator(_parent, _pixel - offset);
+        }
 
         friend bool operator==(const Iterator& a, const Iterator& b) {
-            return a._array == b._array && a._pixel == b._pixel;
+            return a._pixel == b._pixel;
         }
         friend bool operator!=(const Iterator& a, const Iterator& b) {
-            return a._array != b._array || a._pixel == b._pixel;
+            return a._pixel == b._pixel;
         }
 
       private:
@@ -53,8 +62,8 @@ class ConcatenatedArrays {
 
   public:
     using Element = T;
-    using Index = std::size_t;
-    using Array = ndarray::Array<Element, 1, 1>;
+    using Index = std::ptrdiff_t;  // Note: signed, so we can do python-style indexing
+    using Array = ndarray::ArrayRef<Element, 1, 0>;  // non-sequential, so we can have stride != 1
     using Container = std::vector<Array>;
     using iterator = Iterator<ConcatenatedArrays, Element, Element&, Index>;
     using const_iterator = Iterator<ConcatenatedArrays const, Element const, Element const&, Index>;
@@ -74,12 +83,11 @@ class ConcatenatedArrays {
                 _cumulativeCounts[ii] = count;
             }
         }
-    explicit ConcatenatedArrays(Container & arrays) : ConcatenatedArrays(std::forward(arrays)) {}
 
     ~ConcatenatedArrays() {}
-    ConcatenatedArrays(ConcatenatedArrays const&) = delete;
+    ConcatenatedArrays(ConcatenatedArrays const&) = default;
     ConcatenatedArrays(ConcatenatedArrays &&) = default;
-    ConcatenatedArrays & operator=(ConcatenatedArrays const&) = delete;
+    ConcatenatedArrays & operator=(ConcatenatedArrays const&) = default;
     ConcatenatedArrays & operator=(ConcatenatedArrays &&) = default;
 
     iterator begin() { return iterator(*this, 0, 0); }
@@ -87,35 +95,36 @@ class ConcatenatedArrays {
     iterator end() { return iterator(*this, _numArrays, 0); }
     const_iterator end() const { return const_iterator(*this, _numArrays, 0); }
 
-    Element operator[](Index index) const {
-        index = checkIndex(index, _num);
-        auto const index = getIndices(index);
-        return _arrays[index.first][index.second];
-    }
-    Element& operator[](Index index) {
-        index = checkIndex(index, _num);
-        auto const index = getIndices(index);
-        return _arrays[index.first][index.second];
+    std::size_t size() const {
+        return _cumulativeCounts[_numArrays - 1];
     }
 
-    ConcatenatedArrays slice(Index start, Index stop, Index step) const {
-        std::vector<Array> arrays;
+    Element operator[](Index index) const {
+        index = checkIndex(index, _numPixels);
+        auto const indices = getIndices(index);
+        return _arrays[indices.first][indices.second];
+    }
+    Element& operator[](Index index) {
+        index = checkIndex(index, _numPixels);
+        auto const indices = getIndices(index);
+        return _arrays[indices.first][indices.second];
+    }
+
+    ConcatenatedArraysRef<T> slice(Index start, Index stop, Index step) {
+        Container arrays;
         arrays.reserve(_numArrays);
         start = checkIndex(start, _numPixels);
         stop = checkIndex(stop, _numPixels);
 
-        for (Index arr = 0; arr < _numArrays; ++arr) {
-            Index const length = arr.size();
+        for (Index ii = 0; ii < _numArrays; ++ii) {
+            Index const length = _arrays[ii].size();
             if (start < length) {
-                arrays.emplace_back(_arrays[arr][ndarray::view(start, std::min(stop, length), step)]);
+                arrays.push_back(_arrays[ii][ndarray::view(start, std::min(stop, length), step)].deep());
             }
             start -= length;
             stop -= length;
         }
-        return ConcatenatedArrays(arrays);
-    }
-    ConcatenatedArraysRef<T> slice(Index start, Index stop, Index step) {
-        return const_cast<ConcatenatedArrays<T> const>(*this).slice(start, stop, step).deep();
+        return ConcatenatedArraysRef<T>(std::move(arrays));
     }
 
     ConcatenatedArrays<T> shallow() const {
@@ -127,12 +136,15 @@ class ConcatenatedArrays {
     explicit operator Array() const {
         Array output = ndarray::allocate(_numPixels);
         std::copy(begin(), end(), output.begin());
+        return output;
     }
 
+    friend class ConcatenatedArraysRef<T>;
+
   protected:
-    std::pair<Index, Index> getIndices(Index index) {
+    std::pair<Index, Index> getIndices(Index index) const {
         index = checkIndex(index, _numPixels);
-        for (Index ii = 0; ii < _numStrips; ++ii) {
+        for (Index ii = 0; ii < _numArrays; ++ii) {
             if (index < _cumulativeCounts[ii]) {
                 return std::make_pair(ii, index - _cumulativeCounts[ii]);
             }
@@ -140,115 +152,121 @@ class ConcatenatedArrays {
         abort();  // should never reach here: guarded by checkIndex()
     }
 
-  protected:
     Container _arrays;
     Index _numPixels;
     Index _numArrays;
     ndarray::Array<Index, 1, 1> _cumulativeCounts;
-
-  private:
-    friend class ConcatenatedArraysRef<T>;
 };
 
 
 template <typename T>
 class ConcatenatedArraysRef : public ConcatenatedArrays<T> {
   public:
-    ConcatenatedArraysRef(ConcatenatedArrays<T> const& other) : ConcatenatedArrays<T>(other) {}
+    explicit ConcatenatedArraysRef(ConcatenatedArrays<T> const& other) : ConcatenatedArrays<T>(other) {}
+    explicit ConcatenatedArraysRef(typename ConcatenatedArrays<T>::Container && arrays)
+      : ConcatenatedArrays<T>(std::move(arrays)) {}
 
     ~ConcatenatedArraysRef() {}
-    ConcatenatedArraysRef(ConcatenatedArraysRef const&) = delete;
+    ConcatenatedArraysRef(ConcatenatedArraysRef const&) = default;
     ConcatenatedArraysRef(ConcatenatedArraysRef &&) = default;
-    ConcatenatedArraysRef & operator=(ConcatenatedArraysRef const&) = delete;
+    ConcatenatedArraysRef & operator=(ConcatenatedArraysRef const&) = default;
     ConcatenatedArraysRef & operator=(ConcatenatedArraysRef &&) = default;
 
     ConcatenatedArraysRef operator=(T scalar) {
-        return set(scalar, [](T lhs, T rhs) { return rhs});
+        return set(scalar, [](T lhs, T rhs) { return rhs; });
     }
-    ConcatenatedArraysRef operator=(Array const& array)  {
-        return set(array, [](T lhs, T rhs) { return rhs});
+    ConcatenatedArraysRef operator=(typename ConcatenatedArrays<T>::Array const& array)  {
+        return set(array, [](T lhs, T rhs) { return rhs; });
     }
-    ConcatenatedArraysRef operator=(ConcatenatedArrays const& other) {
-        return set(other, [](T lhs, T rhs) { return rhs});
+    ConcatenatedArraysRef operator=(ConcatenatedArrays<T> const& other) {
+        return set(other, [](T lhs, T rhs) { return rhs; });
     }
 
     ConcatenatedArraysRef operator+=(T scalar) {
-        return set(scalar, [](T lhs, T rhs) { return lhs + rhs});
+        return set(scalar, [](T lhs, T rhs) { return lhs + rhs; });
     }
-    ConcatenatedArraysRef operator+=(Array const& array)  {
-        return set(array, [](T lhs, T rhs) { return lhs + rhs});
+    ConcatenatedArraysRef operator+=(typename ConcatenatedArrays<T>::Array const& array)  {
+        return set(array, [](T lhs, T rhs) { return lhs + rhs; });
     }
-    ConcatenatedArraysRef operator+=(ConcatenatedArrays const& other) {
-        return set(other, [](T lhs, T rhs) { return lhs + rhs});
+    ConcatenatedArraysRef operator+=(ConcatenatedArrays<T> const& other) {
+        return set(other, [](T lhs, T rhs) { return lhs + rhs; });
     }
 
     ConcatenatedArraysRef operator-=(T scalar) {
-        return set(scalar, [](T lhs, T rhs) { return lhs - rhs});
+        return set(scalar, [](T lhs, T rhs) { return lhs - rhs; });
     }
-    ConcatenatedArraysRef operator-=(Array const& array)  {
-        return set(array, [](T lhs, T rhs) { return lhs - rhs});
+    ConcatenatedArraysRef operator-=(typename ConcatenatedArrays<T>::Array const& array)  {
+        return set(array, [](T lhs, T rhs) { return lhs - rhs; });
     }
-    ConcatenatedArraysRef operator-=(ConcatenatedArrays const& other) {
-        return set(other, [](T lhs, T rhs) { return lhs - rhs});
+    ConcatenatedArraysRef operator-=(ConcatenatedArrays<T> const& other) {
+        return set(other, [](T lhs, T rhs) { return lhs - rhs; });
     }
 
     ConcatenatedArraysRef operator*=(T scalar) {
-        return set(scalar, [](T lhs, T rhs) { return lhs * rhs});
+        return set(scalar, [](T lhs, T rhs) { return lhs * rhs; });
     }
-    ConcatenatedArraysRef operator*=(Array const& array)  {
-        return set(array, [](T lhs, T rhs) { return lhs * rhs});
+    ConcatenatedArraysRef operator*=(typename ConcatenatedArrays<T>::Array const& array)  {
+        return set(array, [](T lhs, T rhs) { return lhs * rhs; });
     }
-    ConcatenatedArraysRef operator*=(ConcatenatedArrays const& other) {
-        return set(other, [](T lhs, T rhs) { return lhs * rhs});
+    ConcatenatedArraysRef operator*=(ConcatenatedArrays<T> const& other) {
+        return set(other, [](T lhs, T rhs) { return lhs * rhs; });
     }
 
     ConcatenatedArraysRef operator/=(T scalar) {
-        return set(scalar, [](T lhs, T rhs) { return lhs / rhs});
+        return set(scalar, [](T lhs, T rhs) { return lhs / rhs; });
     }
-    ConcatenatedArraysRef operator/=(Array const& array)  {
-        return set(array, [](T lhs, T rhs) { return lhs / rhs});
+    ConcatenatedArraysRef operator/=(typename ConcatenatedArrays<T>::Array const& array)  {
+        return set(array, [](T lhs, T rhs) { return lhs / rhs; });
     }
-    ConcatenatedArraysRef operator/=(ConcatenatedArrays const& other) {
-        return set(other, [](T lhs, T rhs) { return lhs / rhs});
+    ConcatenatedArraysRef operator/=(ConcatenatedArrays<T> const& other) {
+        return set(other, [](T lhs, T rhs) { return lhs / rhs; });
     }
 
     ConcatenatedArraysRef operator%=(T scalar) {
-        return set(scalar, [](T lhs, T rhs) { return lhs % rhs});
+        return set(scalar, [](T lhs, T rhs) { return lhs % rhs; });
     }
-    ConcatenatedArraysRef operator%=(Array const& array)  {
-        return set(array, [](T lhs, T rhs) { return lhs % rhs});
+    ConcatenatedArraysRef operator%=(typename ConcatenatedArrays<T>::Array const& array)  {
+        return set(array, [](T lhs, T rhs) { return lhs % rhs; });
     }
-    ConcatenatedArraysRef operator%=(ConcatenatedArrays const& other) {
-        return set(other, [](T lhs, T rhs) { return lhs % rhs});
+    ConcatenatedArraysRef operator%=(ConcatenatedArrays<T> const& other) {
+        return set(other, [](T lhs, T rhs) { return lhs % rhs; });
     }
 
   private:
-    ConcatenatedArraysRef set(T scalar, std::binary_function<T, T> func) {
-        for (auto iter = begin(); iter != end(); ++iter) {
+    template <typename BinaryFunction>
+    ConcatenatedArraysRef set(T scalar, BinaryFunction func) {
+        for (auto iter = this->begin(); iter != this->end(); ++iter) {
             *iter = func(*iter, scalar);
         }
+        return *this;
     }
-    ConcatenatedArraysRef set(Array const& array, std::binary_function<T, T> func) {
-        if (array.size() != size()) {
+    template <typename BinaryFunction>
+    ConcatenatedArraysRef set(typename ConcatenatedArrays<T>::Array const& array, BinaryFunction func) {
+        if (array.size() != this->size()) {
             throw std::length_error("Array size mismatch");
         }
-        Index ii = 0;
-        for (Index index = 0; index < _numArrays; ++index) {
-            Array sub = _arrays[index];
-            for (Index jj = 0; jj < _cumulativeCounts[arr]; ++jj, ++ii) {
+        typename ConcatenatedArrays<T>::Index ii = 0;
+        for (typename ConcatenatedArrays<T>::Index index = 0; index < this->_numArrays; ++index) {
+            typename ConcatenatedArrays<T>::Array sub = this->_arrays[index];
+            for (typename ConcatenatedArrays<T>::Index jj = 0; jj < this->_cumulativeCounts[index];
+                 ++jj, ++ii) {
                 sub[jj] = func(sub[jj], array[ii]);
             }
         }
+        return *this;
     }
-    ConcatenatedArraysRef set(ConcatenatedArrays const& other, std::binary_function<T, T> func) {
-        if (other.size() != size()) {
+    template <typename BinaryFunction>
+    ConcatenatedArraysRef set(ConcatenatedArrays<T> const& other, BinaryFunction func) {
+        if (other.size() != this->size()) {
             throw std::length_error("Size mismatch");
         }
-        auto thisIter = begin();
+        auto thisIter = this->begin();
         auto otherIter = other.begin();
-        for (Index index = 0; index < other.size(); ++index, ++thisIter, ++otherIter) {
+        for (typename ConcatenatedArrays<T>::Index index = 0; index < other.size();
+             ++index, ++thisIter, ++otherIter) {
             *thisIter = func(*thisIter, *otherIter);
         }
+        return *this;
     }
 
     friend class ConcatenatedArrays<T>;
