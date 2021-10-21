@@ -25,33 +25,35 @@ class ConcatenatedArrays {
         using reference = ReferenceT;
 
         Iterator(ParentT & parent, IndexT index) : Iterator(parent, parent.getIndices(index)) {}
-        Iterator(ParentT & parent, IndexT array, IndexT pixel)
-          : _parent(parent), _array(array), _pixel(pixel) {}
         Iterator(ParentT & parent, std::pair<IndexT, IndexT> const& indices)
           : Iterator(parent, indices.first, indices.second) {}
+        Iterator(ParentT & parent, IndexT array, IndexT pixel)
+          : _parent(parent), _array(array), _pixel(pixel) {}
+
         reference operator*() const { return _parent._arrays[_array][_pixel]; }
 
         Iterator& operator++() {
             ++_pixel;
-            if (_pixel >= _parent._cumulativeCounts[_array]) {
+            if (_pixel >= _parent._arrays[_array].size()) {
                 ++_array;
+                _pixel = 0;
             }
             return *this;
         }
         Iterator operator++(int) { Iterator tmp = *this; ++*this; return tmp; }
 
         Iterator operator+(difference_type offset) const {
-            return Iterator(_parent, _pixel + offset);
+            return Iterator(_parent, _parent.getIndices(_parent.getIndex(_array, _pixel + offset)));
         }
         Iterator operator-(difference_type offset) const {
-            return Iterator(_parent, _pixel - offset);
+            return Iterator(_parent, _parent.getIndices(_parent.getIndex(_array, _pixel - offset)));
         }
 
         friend bool operator==(const Iterator& a, const Iterator& b) {
-            return a._pixel == b._pixel;
+            return a._array == b._array && a._pixel == b._pixel;
         }
         friend bool operator!=(const Iterator& a, const Iterator& b) {
-            return a._pixel == b._pixel;
+            return !(a == b);
         }
 
       private:
@@ -100,12 +102,10 @@ class ConcatenatedArrays {
     }
 
     Element operator[](Index index) const {
-        index = checkIndex(index, _numPixels);
         auto const indices = getIndices(index);
         return _arrays[indices.first][indices.second];
     }
     Element& operator[](Index index) {
-        index = checkIndex(index, _numPixels);
         auto const indices = getIndices(index);
         return _arrays[indices.first][indices.second];
     }
@@ -140,16 +140,31 @@ class ConcatenatedArrays {
     }
 
     friend class ConcatenatedArraysRef<T>;
+    friend std::ostream& operator<<(std::ostream& os, ConcatenatedArrays<T> const& arrays) {
+        os << "ConcatenatedArrays(";
+        for (Index ii = 0; ii < arrays._numArrays; ++ii) {
+            os << arrays._arrays[ii];
+            if (ii != arrays._numArrays - 1) {
+                os << ", ";
+            }
+        }
+        os << ")";
+        return os;
+    }
 
   protected:
     std::pair<Index, Index> getIndices(Index index) const {
         index = checkIndex(index, _numPixels);
         for (Index ii = 0; ii < _numArrays; ++ii) {
             if (index < _cumulativeCounts[ii]) {
-                return std::make_pair(ii, index - _cumulativeCounts[ii]);
+                Index const offset = ii > 0 ? _cumulativeCounts[ii - 1] : 0;
+                return std::make_pair(ii, index - offset);
             }
         }
         abort();  // should never reach here: guarded by checkIndex()
+    }
+    Index getIndex(Index array, Index pixel) const {
+        return (array == 0 ? 0 : _cumulativeCounts[array - 1]) + pixel;
     }
 
     Container _arrays;
