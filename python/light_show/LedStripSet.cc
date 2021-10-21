@@ -43,7 +43,7 @@ void declareLedStripSet(py::module &mod) {
 
 
 PYBIND11_MODULE(LedStripSet, mod) {
-    declareLedStrip(mod);
+    declareLedStripSet(mod);
 }
 
 }  // anonymous namespace
