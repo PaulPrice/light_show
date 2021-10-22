@@ -68,6 +68,7 @@ void declareLedController(py::module &mod) {
     cls.def("size", &LedController::size);
     cls.def("__len__", &LedController::size);
     cls.def("__getitem__", py::overload_cast<int>(&LedController::operator[]), "index"_a);
+    cls.def("getAll", &LedController::getAll);
 }
 
 

@@ -101,7 +101,7 @@ class LedController final {
         }
     }
 
-    LedController(unsigned int dma=10) : _channels(RPI_PWM_CHANNELS) {
+    LedController(unsigned int dma=10) {
         _controller.freq = WS2811_TARGET_FREQ;
         _controller.dmanum = dma;
     }
