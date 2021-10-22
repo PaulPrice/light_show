@@ -42,7 +42,14 @@ class LedStripSet final {
 
         LedStripSetIterator(ArrayIterator red, ArrayIterator green, ArrayIterator blue)
           : _red(red), _green(green), _blue(blue) {}
+
+        LedStripSetIterator(LedStripSetIterator const&) = default;
+        LedStripSetIterator(LedStripSetIterator &&) = default;
+        LedStripSetIterator & operator=(LedStripSetIterator const&) = default;
+        LedStripSetIterator & operator=(LedStripSetIterator &&) = default;
+
         reference operator*() const { return ReferenceT(*_red, *_green, *_blue); }
+
         LedStripSetIterator& operator++() {
             ++_red;
             ++_green;
@@ -50,6 +57,31 @@ class LedStripSet final {
             return *this;
         }
         LedStripSetIterator operator++(int) { Iterator tmp = *this; ++*this; return tmp; }
+        LedStripSetIterator operator+(difference_type offset) const {
+            return LedStripSetIterator(_red + offset, _green + offset, _blue + offset);
+        }
+        LedStripSetIterator& operator+=(difference_type offset) {
+            _red += offset;
+            _green += offset;
+            _blue += offset;
+            return *this;
+        }
+        LedStripSetIterator& operator--() {
+            --_red;
+            --_green;
+            --_blue;
+            return *this;
+        }
+        LedStripSetIterator operator--(int) { LedStripSetIterator tmp = *this; --*this; return tmp; }
+        LedStripSetIterator operator-(difference_type offset) const {
+            return LedStripSetIterator(_red - offset, _green - offset, _blue - offset);
+        }
+        LedStripSetIterator& operator-=(difference_type offset) {
+            _red -= offset;
+            _green -= offset;
+            _blue -= offset;
+            return *this;
+        }
 
         friend bool operator==(const LedStripSetIterator& lhs, const LedStripSetIterator& rhs) {
             return lhs._red == rhs._red && lhs._green == rhs._green && lhs._blue == rhs._blue;

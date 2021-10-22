@@ -25,6 +25,11 @@ struct ColorRGB {
     Pixel max() const { return std::max({red, green, blue}); }
     Pixel min() const { return std::min({red, green, blue}); }
 
+    friend std::ostream& operator<<(std::ostream& os, ColorRGB const& color) {
+        os << "ColorRGB(" << int(color.red) << "," << int(color.green) << "," << int(color.blue) << ")";
+        return os;
+    }
+
     Pixel red;
     Pixel green;
     Pixel blue;
@@ -44,12 +49,16 @@ struct ColorRGBRef {
         blue = other.blue;
     }
     void operator=(ColorHSV const& other);
+
+    friend std::ostream& operator<<(std::ostream& os, ColorRGBRef const& color) {
+        os << "ColorRGBRef(" << int(color.red) << "," << int(color.green) << "," << int(color.blue) << ")";
+        return os;
+    }
+
     Pixel & red;
     Pixel & green;
     Pixel & blue;
 };
-
-
 
 
 ColorRGB const WHITE{255, 255, 255};
@@ -122,6 +131,11 @@ struct ColorHSV {
         value = other.value;
     }
     void operator=(ColorRGB const& other) { operator=(ColorHSV(other)); }
+
+    friend std::ostream& operator<<(std::ostream& os, ColorHSV const& color) {
+        os << "ColorHSV(" << color.hue << "," << color.saturation << "," << color.value << ")";
+        return os;
+    }
 
     float hue;
     float saturation;

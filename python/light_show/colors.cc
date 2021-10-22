@@ -1,5 +1,7 @@
+#include <sstream>
 #include "pybind11/pybind11.h"
 
+#include "light_show/python.h"
 #include "light_show/colors.h"
 
 namespace py = pybind11;
@@ -21,6 +23,8 @@ void declareColorRGB(py::module &mod) {
     cls.def_readwrite("red", &ColorRGB::red);
     cls.def_readwrite("green", &ColorRGB::green);
     cls.def_readwrite("blue", &ColorRGB::blue);
+    declareStringify(cls, "__str__");
+    declareStringify(cls, "__repr__");
 }
 
 
@@ -35,6 +39,8 @@ void declareColorRGBRef(py::module &mod) {
                      [](ColorRGBRef & self, Pixel green) { self.green = green; });
     cls.def_property("blue", [](ColorRGBRef const& self) { return self.blue; },
                      [](ColorRGBRef & self, Pixel blue) { self.blue = blue; });
+    declareStringify(cls, "__str__");
+    declareStringify(cls, "__repr__");
 }
 
 
@@ -50,6 +56,8 @@ void declareColorHSV(py::module &mod) {
     cls.def_readwrite("saturation", &ColorHSV::saturation);
     cls.def_readwrite("sat", &ColorHSV::saturation);
     cls.def_readwrite("value", &ColorHSV::value);
+    declareStringify(cls, "__str__");
+    declareStringify(cls, "__repr__");
 }
 
 
@@ -57,21 +65,21 @@ PYBIND11_MODULE(colors, mod) {
     declareColorRGB(mod);
     declareColorRGBRef(mod);
     declareColorHSV(mod);
-    py::globals()["WHITE"] = py::cast(WHITE);
-    py::globals()["BLACK"] = py::cast(BLACK);
-    py::globals()["RED"] = py::cast(RED);
-    py::globals()["ORANGE"] = py::cast(ORANGE);
-    py::globals()["YELLOW"] = py::cast(YELLOW);
-    py::globals()["GREEN"] = py::cast(GREEN);
-    py::globals()["BLUE"] = py::cast(BLUE);
-    py::globals()["MAGENTA"] = py::cast(MAGENTA);
-    py::globals()["CYAN"] = py::cast(CYAN);
-    py::globals()["PINK"] = py::cast(PINK);
-    py::globals()["BROWN"] = py::cast(BROWN);
-    py::globals()["SKY"] = py::cast(SKY);
-    py::globals()["AQUA"] = py::cast(AQUA);
-    py::globals()["CRIMSON"] = py::cast(CRIMSON);
-    py::globals()["GOLD"] = py::cast(GOLD);
+    mod.attr("WHITE") = py::cast(WHITE);
+    mod.attr("BLACK") = py::cast(BLACK);
+    mod.attr("RED") = py::cast(RED);
+    mod.attr("ORANGE") = py::cast(ORANGE);
+    mod.attr("YELLOW") = py::cast(YELLOW);
+    mod.attr("GREEN") = py::cast(GREEN);
+    mod.attr("BLUE") = py::cast(BLUE);
+    mod.attr("MAGENTA") = py::cast(MAGENTA);
+    mod.attr("CYAN") = py::cast(CYAN);
+    mod.attr("PINK") = py::cast(PINK);
+    mod.attr("BROWN") = py::cast(BROWN);
+    mod.attr("SKY") = py::cast(SKY);
+    mod.attr("AQUA") = py::cast(AQUA);
+    mod.attr("CRIMSON") = py::cast(CRIMSON);
+    mod.attr("GOLD") = py::cast(GOLD);
 }
 
 }  // anonymous namespace

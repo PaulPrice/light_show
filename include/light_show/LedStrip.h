@@ -1,6 +1,8 @@
 #ifndef LIGHT_SHOW_LEDSTRIP_H
 #define LIGHT_SHOW_LEDSTRIP_H
 
+#include <limits>
+
 #include "ndarray.h"
 #include "ndarray/Vector.h"
 
@@ -105,8 +107,9 @@ class LedStrip final {
 
     ndarray::Array<float, 1, 1> brightness() const {
         ndarray::Array<float, 1, 1> brightness = ndarray::allocate(_num);
+        float const norm = 1.0/std::numeric_limits<Pixel>::max();
         for (Size ii = 0; ii < _num; ++ii) {
-            brightness[ii] = std::max({_red[ii], _green[ii], _blue[ii]})/255.0;
+            brightness[ii] = std::max({_red[ii], _green[ii], _blue[ii]})*norm;
         }
         return brightness;
     }

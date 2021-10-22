@@ -4,6 +4,7 @@
 #include "ndarray.h"
 #include "ndarray/pybind11.h"
 
+#include "light_show/python.h"
 #include "light_show/LedStripSet.h"
 
 namespace py = pybind11;
@@ -21,6 +22,12 @@ void declareLedStripSet(py::module &mod) {
     cls.def_property("green", py::overload_cast<>(&LedStripSet::getGreen), &LedStripSet::setGreen);
     cls.def_property("blue", py::overload_cast<>(&LedStripSet::getBlue), &LedStripSet::setBlue);
     cls.def("__getitem__", py::overload_cast<LedStripSet::Index>(&LedStripSet::operator[]));
+    cls.def("__setitem__", py::overload_cast<LedStripSet::Index, ColorRGB const&>(&LedStripSet::set));
+    cls.def("__setitem__", py::overload_cast<LedStripSet::Index, ColorHSV const&>(&LedStripSet::set));
+    cls.def("__setitem__", py::overload_cast<LedStripSet::Index, Pixel, Pixel, Pixel>(&LedStripSet::set));
+    cls.def("__setitem__", setFromSlice<LedStripSet, ColorRGB>);
+    cls.def("__setitem__", setFromSlice<LedStripSet, ColorRGBRef>);
+    cls.def("__setitem__", setFromSlice<LedStripSet, ColorHSV>);
     cls.def("get", py::overload_cast<LedStripSet::Index>(&LedStripSet::get));
     cls.def("set", py::overload_cast<LedStripSet::Index, ColorRGB const&>(&LedStripSet::set));
     cls.def("set", py::overload_cast<LedStripSet::Index, ColorHSV const&>(&LedStripSet::set));

@@ -32,6 +32,11 @@ class ConcatenatedArrays {
         Iterator(ParentT & parent, IndexT array, IndexT pixel)
           : _parent(parent), _array(array), _pixel(pixel) {}
 
+        Iterator(Iterator const&) = default;
+        Iterator(Iterator &&) = default;
+        Iterator & operator=(Iterator const&) = default;
+        Iterator & operator=(Iterator &&) = default;
+
         reference operator*() const { return _parent._arrays[_array][_pixel]; }
 
         Iterator& operator++() {
@@ -58,6 +63,21 @@ class ConcatenatedArrays {
         }
         Iterator operator-(difference_type offset) const {
             return Iterator(_parent, _parent.getIndices(_parent.getIndex(_array, _pixel - offset)));
+        }
+
+        Iterator& operator+=(difference_type offset) {
+            if (offset == 1) {
+                return ++*this;
+            }
+            std::tie(_array, _pixel) = _parent.getIndices(_parent.getIndex(_array, _pixel + offset));
+            return *this;
+        }
+        Iterator& operator-=(difference_type offset) {
+            if (offset == 1) {
+                return --*this;
+            }
+            std::tie(_array, _pixel) = _parent.getIndices(_parent.getIndex(_array, _pixel - offset));
+            return *this;
         }
 
         friend bool operator==(const Iterator& a, const Iterator& b) {

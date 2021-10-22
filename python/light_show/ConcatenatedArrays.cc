@@ -5,6 +5,7 @@
 #include "ndarray/pybind11.h"
 
 #include "light_show/config.h"
+#include "light_show/python.h"
 #include "light_show/ConcatenatedArrays.h"
 
 namespace py = pybind11;
@@ -33,16 +34,6 @@ ConcatenatedArraysRef<T> getSlice(ConcatenatedArraysRef<T> & arrays, py::slice c
         return arrays;
     }
     return arrays.slice(start, stop, step);
-}
-
-
-template <class PyClass>
-void declareStringify(PyClass &cls, std::string const &method) {
-    cls.def(method.c_str(), [](typename PyClass::type const &self) {
-        std::ostringstream os;
-        os << self;
-        return os.str();
-    });
 }
 
 
