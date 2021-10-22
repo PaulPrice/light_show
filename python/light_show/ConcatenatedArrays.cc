@@ -53,6 +53,9 @@ void declareConcatenatedArrays(py::module &mod, const char* suffix) {
     cls.def("__len__", &Class::size);
     cls.def("__getitem__", [](Class & self, typename Class::Index index) { return self[index]; });
     cls.def("__getitem__", [](Class & self, py::slice const& slice) { return getSlice(self, slice); });
+    cls.def("__getitem__",
+            py::overload_cast<ndarray::Array<typename Class::Index, 1, 1> const&>(&Class::operator[]),
+            "indices"_a);
     cls.def("__setitem__", [](Class & self, typename Class::Index index, T scalar) { self[index] = scalar; });
     cls.def("__setitem__", [](Class & self, py::slice const& slice, T scalar) {
         getSlice(self, slice) = scalar;
@@ -63,6 +66,16 @@ void declareConcatenatedArrays(py::module &mod, const char* suffix) {
     cls.def("__setitem__", [](Class & self, py::slice const& slice, Class const& other) {
         getSlice(self, slice) = other;
     });
+    cls.def("__setitem__",
+            [](Class & self, ndarray::Array<typename Class::Index, 1, 1> const& indices,
+               typename Class::Array::Shallow const& rhs) {
+        if (indices.size() != rhs.size()) {
+            throw std::length_error("Size mismatch");
+        }
+        for (typename Class::Size ii = 0; ii < rhs.size(); ++ii) {
+            self[indices[ii]] = rhs[ii];
+        }
+    }, "indices"_a, "rhs"_a);
     cls.def_property_readonly("array", [](Class const& self) {
         return typename Class::Array(self).shallow();
     });

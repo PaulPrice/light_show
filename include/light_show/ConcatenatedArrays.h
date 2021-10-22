@@ -141,6 +141,12 @@ class ConcatenatedArrays {
         auto const indices = getIndices(index);
         return _arrays[indices.first][indices.second];
     }
+    ndarray::Array<T, 1, 1> operator[](ndarray::Array<Index, 1, 1> const& indices) {
+        ndarray::Array<T, 1, 1> result = ndarray::allocate(indices.size());
+        std::transform(indices.begin(), indices.end(), result.begin(),
+                       [this](Index index) { return (*this)[index]; });
+        return result;
+    }
 
     ConcatenatedArraysRef<T> slice(Index start, Index stop, Index step) {
         // No python-like indexing: we've already done it in the layer above.
