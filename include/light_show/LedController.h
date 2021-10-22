@@ -44,6 +44,9 @@ class LedController final {
     LedController(int gpio, int num, StripType type, unsigned int dma=10
         ) : LedController(dma) {
         _setChannel(0, gpio, num, type);
+        for (std::size_t ii = 1; ii < RPI_PWM_CHANNELS; ++ii) {
+            _setChannel(ii, 0, 0, StripType(0));
+        }
         _start(1);
     }
 
@@ -66,7 +69,7 @@ class LedController final {
     }
 
     ~LedController() {
-        ws2811_fini(&_leds);
+        ws2811_fini(&_controller);
     }
 
     void render(bool wait=true) const {
@@ -92,15 +95,15 @@ class LedController final {
   private:
 
     void _execute(std::function<ws2811_return_t(ws2811_t*)> func, char const* name) const {
-        ws2811_return_t code = func(const_cast<ws2811_t*>(&_leds));
+        ws2811_return_t code = func(const_cast<ws2811_t*>(&_controller));
         if (code != WS2811_SUCCESS) {
             throw Ws2811Exception(std::string(name), code);
         }
     }
 
-    LedController(unsigned int dma=10) {
-        _leds.freq = WS2811_TARGET_FREQ;
-        _leds.dmanum = dma;
+    LedController(unsigned int dma=10) : _channels(RPI_PWM_CHANNELS) {
+        _controller.freq = WS2811_TARGET_FREQ;
+        _controller.dmanum = dma;
     }
 
     void _setChannel(int index, int gpio, int num, StripType type) {
@@ -108,20 +111,22 @@ class LedController final {
         if (num < 0) {
             throw std::length_error("Negative length specified");
         }
-        _leds.channel[index].gpionum = gpio;
-        _leds.channel[index].count = num;
-        _leds.channel[index].brightness = 255;
-        _leds.channel[index].strip_type = type;
+        _controller.channel[index].gpionum = gpio;
+        _controller.channel[index].count = num;
+        _controller.channel[index].invert = 0;
+        _controller.channel[index].brightness = 255;
+        _controller.channel[index].strip_type = type;
     }
 
     void _start(int numChannels) {
         _execute(ws2811_init, "ws2811_init");
+        _channels.reserve(numChannels);
         for (int ii = 0; ii < numChannels; ++ii) {
-            _channels.emplace_back(_leds.channel[ii].count, _leds.channel[ii].leds);
+            _channels.emplace_back(_controller.channel[ii].count, _controller.channel[ii].leds);
         }
     }
 
-    ws2811_t _leds;
+    ws2811_t _controller;
     std::vector<LedStrip> _channels;
 };
 
