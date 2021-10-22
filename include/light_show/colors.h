@@ -1,6 +1,7 @@
 #ifndef LIGHT_SHOW_COLORS_H
 #define LIGHT_SHOW_COLORS_H
 
+#include <limits>
 #include <algorithm>
 #include "light_show/config.h"
 
@@ -60,6 +61,7 @@ struct ColorRGBRef {
     Pixel & blue;
 };
 
+constexpr Pixel PIXEL_MAX = std::numeric_limits<Pixel>::max();
 
 ColorRGB const WHITE{255, 255, 255};
 ColorRGB const BLACK{0, 0, 0};
@@ -101,6 +103,7 @@ struct ColorHSV {
         } else {
             hue = (4.0 + gg - rr)/6.0;
         }
+        value /= float(PIXEL_MAX);
     }
 
     ColorRGB toRGB() const {
@@ -109,17 +112,18 @@ struct ColorHSV {
         }
         int ii = hue*6.0;  // truncate
         float const ff = hue*6.0 - ii;  // remainder
-        float const pp = value*(1.0 - saturation);
-        float const qq = value*(1.0 - saturation*ff);
-        float const tt = value*(1.0 - saturation*(1.0 - ff));
+        float const pixelValue = value*PIXEL_MAX;
+        float const pp = pixelValue*(1.0 - saturation);
+        float const qq = pixelValue*(1.0 - saturation*ff);
+        float const tt = pixelValue*(1.0 - saturation*(1.0 - ff));
         ii = ii % 6;
         switch (ii) {
-          case 0: return ColorRGB(value, tt, pp);
-          case 1: return ColorRGB(qq, value, pp);
-          case 2: return ColorRGB(pp, value, tt);
-          case 3: return ColorRGB(pp, qq, value);
-          case 4: return ColorRGB(tt, pp, value);
-          case 5: return ColorRGB(value, pp, qq);
+          case 0: return ColorRGB(pixelValue, tt, pp);
+          case 1: return ColorRGB(qq, pixelValue, pp);
+          case 2: return ColorRGB(pp, pixelValue, tt);
+          case 3: return ColorRGB(pp, qq, pixelValue);
+          case 4: return ColorRGB(tt, pp, pixelValue);
+          case 5: return ColorRGB(pixelValue, pp, qq);
           default:
             abort();
         }
