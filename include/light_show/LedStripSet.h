@@ -26,6 +26,8 @@ auto transform(Container const& container, UnaryFunction func) {
 
 class LedStripSet final {
   public:
+    using Size = std::size_t;
+    using Index = std::ptrdiff_t;
     using Collection = std::vector<LedStrip>;
     using Array = ConcatenatedArrays<Pixel>;
 
@@ -93,8 +95,8 @@ class LedStripSet final {
     iterator end() { return iterator(_red.end(), _green.end(), _blue.end()); }
     const_iterator end() const { return const_iterator(_red.end(), _green.end(), _blue.end()); }
 
-    ColorRGB get(int index) const { return operator[](index); }
-    ColorRGBRef get(int index) { return operator[](index); }
+    ColorRGB get(Index index) const { return operator[](index); }
+    ColorRGBRef get(Index index) { return operator[](index); }
     Array & getRed() { return _red; }
     Array const& getRed() const { return _red; }
     Array & getGreen() { return _green; }
@@ -102,24 +104,24 @@ class LedStripSet final {
     Array & getBlue() { return _blue; }
     Array const& getBlue() const { return _blue; }
 
-    void set(int index, ColorRGB const& rgb) { operator[](index) = rgb; }
-    void set(int index, ColorHSV const& hsv) { operator[](index) = hsv.toRGB(); }
-    void set(int index, Pixel red, Pixel green, Pixel blue) {
+    void set(Index index, ColorRGB const& rgb) { operator[](index) = rgb; }
+    void set(Index index, ColorHSV const& hsv) { operator[](index) = hsv.toRGB(); }
+    void set(Index index, Pixel red, Pixel green, Pixel blue) {
         operator[](index) = ColorRGB(red, green, blue);
     }
     void setRed(Array const& array) { _red.deep() = array; }
     void setGreen(Array const& array) { _green.deep() = array; }
     void setBlue(Array const& array) { _blue.deep() = array; }
 
-    int size() const {
+    Size size() const {
         return _numPixels;
     }
 
-    ColorRGB operator[](int index) const {
+    ColorRGB operator[](Index index) const {
         index = checkIndex(index, _numPixels);
         return ColorRGB(_red[index], _green[index], _blue[index]);
     }
-    ColorRGBRef operator[](int index) {
+    ColorRGBRef operator[](Index index) {
         index = checkIndex(index, _numPixels);
         return ColorRGBRef(_red[index], _green[index], _blue[index]);
     }
@@ -147,18 +149,18 @@ class LedStripSet final {
     ndarray::Array<float, 1, 1> brightness() const {
         ndarray::Array<float, 1, 1> brightness = ndarray::allocate(_numPixels);
         auto iter = begin();
-        for (int ii = 0; ii < _numPixels; ++ii, ++iter) {
+        for (Size ii = 0; ii < _numPixels; ++ii, ++iter) {
             brightness[ii] = std::max({(*iter).red, (*iter).green, (*iter).blue})/255.0;
         }
         return brightness;
     }
 
     // HSV
-    ColorHSV getHSV(int index) const { return ColorHSV(operator[](index)); }
+    ColorHSV getHSV(Index index) const { return ColorHSV(operator[](index)); }
     ndarray::Array<float, 2, 1> getHSV() const {
         ndarray::Array<float, 2, 1> result = ndarray::allocate(_numPixels, 3);
         auto iter = begin();
-        for (int ii = 0; ii < _numPixels; ++ii, ++iter) {
+        for (Size ii = 0; ii < _numPixels; ++ii, ++iter) {
             ColorHSV hsv{*iter};
             result[ii][0] = hsv.hue;
             result[ii][1] = hsv.saturation;
@@ -174,7 +176,7 @@ class LedStripSet final {
             throw std::length_error("Incorrect width");
         }
         auto iter = begin();
-        for (int ii = 0; ii < _numPixels; ++ii, ++iter) {
+        for (Size ii = 0; ii < _numPixels; ++ii, ++iter) {
             *iter = ColorHSV(hsv[ii][0], hsv[ii][1], hsv[ii][2]).toRGB();
         }
     }
@@ -187,15 +189,15 @@ class LedStripSet final {
             throw std::length_error("Incorrect length");
         }
         auto iter = begin();
-        for (int ii = 0; ii < _numPixels; ++ii, ++iter) {
+        for (Size ii = 0; ii < _numPixels; ++ii, ++iter) {
             *iter = ColorHSV(hue[ii], saturation[ii], value[ii]).toRGB();
         }
     }
 
   private:
     Collection _strips;
-    std::size_t _numPixels;
-    std::size_t _numStrips;
+    Size _numPixels;
+    Size _numStrips;
     Array _red;
     Array _green;
     Array _blue;

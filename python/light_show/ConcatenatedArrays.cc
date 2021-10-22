@@ -17,7 +17,8 @@ namespace {
 
 #define DECLARE_OPERATOR(INSTANCE, TYPE, PYNAME, FUNCTION) \
     (INSTANCE).def(PYNAME, py::overload_cast<TYPE>(FUNCTION), "scalar"_a); \
-    (INSTANCE).def(PYNAME, py::overload_cast<typename ConcatenatedArrays<TYPE>::Array const&>(FUNCTION), \
+    (INSTANCE).def(PYNAME, \
+                   py::overload_cast<typename ConcatenatedArrays<TYPE>::Array::Shallow const&>(FUNCTION), \
                    "array"_a); \
     (INSTANCE).def(PYNAME, py::overload_cast<ConcatenatedArrays<TYPE> const&>(FUNCTION), "other"_a);
 
@@ -28,7 +29,7 @@ ConcatenatedArraysRef<T> getSlice(ConcatenatedArraysRef<T> & arrays, py::slice c
     if (!slice.compute(arrays.size(), &start, &stop, &step, &size)) {
         throw std::length_error("Unable to compute slice");
     }
-    if (size == arrays.size()) {
+    if (size == typename ConcatenatedArraysRef<T>::Index(arrays.size())) {
         return arrays;
     }
     return arrays.slice(start, stop, step);

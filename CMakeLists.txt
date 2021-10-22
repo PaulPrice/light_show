@@ -1,8 +1,15 @@
 cmake_minimum_required(VERSION 3.4...3.18)
 project(light_show VERSION 0.0.0 LANGUAGES C CXX)
+
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-O2")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Og")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 include(CheckIncludeFile)
 CHECK_INCLUDE_FILE(/opt/vc/include/bcm_host.h RASPBERRY_PI)
@@ -16,7 +23,8 @@ find_package(pybind11 CONFIG REQUIRED)
 find_package(Boost)
 find_package(eigen3)
 
-include_directories(${PROJECT_SOURCE_DIR}/include
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(SYSTEM
                     ${PROJECT_SOURCE_DIR}/ndarray/include
                     ${Boost_INCLUDE_DIR}
                     ${EIGEN3_INCLUDE_DIRS}

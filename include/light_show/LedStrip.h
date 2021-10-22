@@ -14,7 +14,9 @@ namespace light_show {
 
 class LedStrip final {
   public:
-    using Array = ndarray::Array<Pixel, 1, 1>;
+    using Size = std::size_t;
+    using Index = std::ptrdiff_t;
+    using Array = ndarray::Array<Pixel, 1, 0>;
     using iterator = Iterator<LedStrip, ColorRGB, ColorRGBRef, int>;
     using const_iterator = Iterator<LedStrip const, ColorRGB const, ColorRGBRef const, int>;
 
@@ -24,7 +26,7 @@ class LedStrip final {
         auto const stride = ndarray::makeVector(4);
         Pixel * pixels = reinterpret_cast<Pixel*>(data);
         _blue = ndarray::external(pixels + 0, shape, stride);
-        _green = ndarray::external(pixels, shape, stride);
+        _green = ndarray::external(pixels + 1, shape, stride);
         _red = ndarray::external(pixels + 2, shape, stride);
         clear();
     }
@@ -40,8 +42,8 @@ class LedStrip final {
     iterator end() { return iterator(*this, _num); }
     const_iterator end() const { return const_iterator(*this, _num); }
 
-    ColorRGB get(int index) const { return operator[](index); }
-    ColorRGBRef get(int index) { return operator[](index); }
+    ColorRGB get(Index index) const { return operator[](index); }
+    ColorRGBRef get(Index index) { return operator[](index); }
     Array & getRed() { return _red; }
     Array const& getRed() const { return _red; }
     Array & getGreen() { return _green; }
@@ -49,24 +51,24 @@ class LedStrip final {
     Array & getBlue() { return _blue; }
     Array const& getBlue() const { return _blue; }
 
-    void set(int index, ColorRGB const& rgb) { operator[](index) = rgb; }
-    void set(int index, ColorHSV const& hsv) { operator[](index) = hsv.toRGB(); }
-    void set(int index, Pixel red, Pixel green, Pixel blue) {
+    void set(Index index, ColorRGB const& rgb) { operator[](index) = rgb; }
+    void set(Index index, ColorHSV const& hsv) { operator[](index) = hsv.toRGB(); }
+    void set(Index index, Pixel red, Pixel green, Pixel blue) {
         operator[](index) = ColorRGB(red, green, blue);
     }
     void setRed(Array const& array) { _red.deep() = array; }
     void setGreen(Array const& array) { _green.deep() = array; }
     void setBlue(Array const& array) { _blue.deep() = array; }
 
-    int size() const {
+    Size size() const {
         return _num;
     }
 
-    ColorRGB operator[](int index) const {
+    ColorRGB operator[](Index index) const {
         index = checkIndex(index, _num);
         return ColorRGB(_red[index], _green[index], _blue[index]);
     }
-    ColorRGBRef operator[](int index) {
+    ColorRGBRef operator[](Index index) {
         index = checkIndex(index, _num);
         return ColorRGBRef(_red[index], _green[index], _blue[index]);
     }
@@ -93,17 +95,17 @@ class LedStrip final {
 
     ndarray::Array<float, 1, 1> brightness() const {
         ndarray::Array<float, 1, 1> brightness = ndarray::allocate(_num);
-        for (int ii = 0; ii < _num; ++ii) {
+        for (Size ii = 0; ii < _num; ++ii) {
             brightness[ii] = std::max({_red[ii], _green[ii], _blue[ii]})/255.0;
         }
         return brightness;
     }
 
     // HSV
-    ColorHSV getHSV(int index) const { return ColorHSV(operator[](index)); }
+    ColorHSV getHSV(Index index) const { return ColorHSV(operator[](index)); }
     ndarray::Array<float, 2, 1> getHSV() const {
         ndarray::Array<float, 2, 1> result = ndarray::allocate(_num, 3);
-        for (int ii = 0; ii < _num; ++ii) {
+        for (Size ii = 0; ii < _num; ++ii) {
             ColorHSV hsv{operator[](ii)};
             result[ii][0] = hsv.hue;
             result[ii][1] = hsv.saturation;
@@ -118,7 +120,7 @@ class LedStrip final {
         if (hsv.getShape()[1] != 3) {
             throw std::length_error("Incorrect width");
         }
-        for (int ii = 0; ii < _num; ++ii) {
+        for (Size ii = 0; ii < _num; ++ii) {
             operator[](ii) = ColorHSV(hsv[ii][0], hsv[ii][1], hsv[ii][2]).toRGB();
         }
     }
@@ -130,13 +132,13 @@ class LedStrip final {
         if (hue.size() != _num || saturation.size() != _num || value.size() != _num) {
             throw std::length_error("Incorrect length");
         }
-        for (int ii = 0; ii < _num; ++ii) {
+        for (Size ii = 0; ii < _num; ++ii) {
             operator[](ii) = ColorHSV(hue[ii], saturation[ii], value[ii]).toRGB();
         }
     }
 
   private:
-    int _num;
+    std::size_t _num;
     ColorPixel * _data;
     Array _blue, _green, _red;
 };

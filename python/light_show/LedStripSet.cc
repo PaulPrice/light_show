@@ -19,11 +19,11 @@ void declareLedStripSet(py::module &mod) {
     cls.def_property("red", py::overload_cast<>(&LedStripSet::getRed), &LedStripSet::setRed);
     cls.def_property("green", py::overload_cast<>(&LedStripSet::getGreen), &LedStripSet::setGreen);
     cls.def_property("blue", py::overload_cast<>(&LedStripSet::getBlue), &LedStripSet::setBlue);
-    cls.def("__getitem__", py::overload_cast<int>(&LedStripSet::operator[]));
-    cls.def("get", py::overload_cast<int>(&LedStripSet::get));
-    cls.def("set", py::overload_cast<int, ColorRGB const&>(&LedStripSet::set));
-    cls.def("set", py::overload_cast<int, ColorHSV const&>(&LedStripSet::set));
-    cls.def("set", py::overload_cast<int, Pixel, Pixel, Pixel>(&LedStripSet::set));
+    cls.def("__getitem__", py::overload_cast<LedStripSet::Index>(&LedStripSet::operator[]));
+    cls.def("get", py::overload_cast<LedStripSet::Index>(&LedStripSet::get));
+    cls.def("set", py::overload_cast<LedStripSet::Index, ColorRGB const&>(&LedStripSet::set));
+    cls.def("set", py::overload_cast<LedStripSet::Index, ColorHSV const&>(&LedStripSet::set));
+    cls.def("set", py::overload_cast<LedStripSet::Index, Pixel, Pixel, Pixel>(&LedStripSet::set));
     cls.def("__len__", &LedStripSet::size);
     cls.def("size", &LedStripSet::size);
     cls.def("isOn", &LedStripSet::isOn);
@@ -31,7 +31,7 @@ void declareLedStripSet(py::module &mod) {
     cls.def("fill", py::overload_cast<ColorRGB const&>(&LedStripSet::fill));
     cls.def("clear", &LedStripSet::clear);
     cls.def("brightness", &LedStripSet::brightness);
-    cls.def("getHSV", py::overload_cast<int>(&LedStripSet::getHSV, py::const_));
+    cls.def("getHSV", py::overload_cast<LedStripSet::Index>(&LedStripSet::getHSV, py::const_));
     cls.def("getHSV", py::overload_cast<>(&LedStripSet::getHSV, py::const_));
     cls.def("setHSV", py::overload_cast<ndarray::Array<float, 2, 1> const&>(&LedStripSet::setHSV),
             "hsv"_a);
