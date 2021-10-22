@@ -20,8 +20,18 @@ class LedStrip final {
     using iterator = Iterator<LedStrip, ColorRGB, ColorRGBRef, int>;
     using const_iterator = Iterator<LedStrip const, ColorRGB const, ColorRGBRef const, int>;
 
-    LedStrip(int num, ColorPixel * data
-        ) : _num(num), _data(data) {
+    LedStrip(Array & red, Array & green, Array & blue)
+      : _num(red.size()),
+        _blue(blue),
+        _green(green),
+        _red(red) {
+          if (green.size() != _num || blue.size() != _num) {
+              throw std::length_error("Size mismatch");
+          }
+      }
+
+    LedStrip(Size num, ColorPixel * data
+        ) : _num(num) {
         auto const shape = ndarray::makeVector(num);
         auto const stride = ndarray::makeVector(4);
         Pixel * pixels = reinterpret_cast<Pixel*>(data);
@@ -139,7 +149,6 @@ class LedStrip final {
 
   private:
     std::size_t _num;
-    ColorPixel * _data;
     Array _blue, _green, _red;
 };
 

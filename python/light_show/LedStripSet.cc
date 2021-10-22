@@ -16,6 +16,7 @@ namespace {
 
 void declareLedStripSet(py::module &mod) {
     py::class_<LedStripSet> cls(mod, "LedStripSet");
+    cls.def(py::init<LedStripSet::Collection&>(), "strips"_a);
     cls.def_property("red", py::overload_cast<>(&LedStripSet::getRed), &LedStripSet::setRed);
     cls.def_property("green", py::overload_cast<>(&LedStripSet::getGreen), &LedStripSet::setGreen);
     cls.def_property("blue", py::overload_cast<>(&LedStripSet::getBlue), &LedStripSet::setBlue);
