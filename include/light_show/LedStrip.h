@@ -19,8 +19,8 @@ class LedStrip final {
     using Size = std::size_t;
     using Index = std::ptrdiff_t;
     using Array = ndarray::Array<Pixel, 1, 0>;
-    using iterator = Iterator<LedStrip, ColorRGB, ColorRGBRef, int>;
-    using const_iterator = Iterator<LedStrip const, ColorRGB const, ColorRGBRef const, int>;
+    using iterator = IndexBasedIterator<LedStrip, ColorRGB, ColorRGBRef, int>;
+    using const_iterator = IndexBasedIterator<LedStrip const, ColorRGB const, ColorRGBRef const, int>;
 
     LedStrip(Array & red, Array & green, Array & blue)
       : _num(red.size()),

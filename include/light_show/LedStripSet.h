@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <exception>
 #include <numeric>
+#include <iterator>
 
 #include "ndarray.h"
 
@@ -35,7 +36,7 @@ class LedStripSet final {
     template <typename ArrayIterator, typename ReferenceT>
     class LedStripSetIterator {
       public:
-        using iterator_category = std::random_access_iterator_tag;
+        using iterator_category = std::bidirectional_iterator_tag;
         using difference_type = typename ArrayIterator::difference_type;
         using value_type = ColorRGB;
         using reference = ReferenceT;
@@ -56,7 +57,7 @@ class LedStripSet final {
             ++_blue;
             return *this;
         }
-        LedStripSetIterator operator++(int) { Iterator tmp = *this; ++*this; return tmp; }
+        LedStripSetIterator operator++(int) { LedStripSetIterator tmp = *this; ++*this; return tmp; }
         LedStripSetIterator operator+(difference_type offset) const {
             return LedStripSetIterator(_red + offset, _green + offset, _blue + offset);
         }
@@ -158,12 +159,14 @@ class LedStripSet final {
         return ColorRGBRef(_red[index], _green[index], _blue[index]);
     }
 
+#if 1
     bool isOn() const {
         bool const red = std::any_of(_red.begin(), _red.end(), [](Pixel pp) { return pp > 0; });
         bool const green = std::any_of(_green.begin(), _green.end(), [](Pixel pp) { return pp > 0; });
         bool const blue = std::any_of(_blue.begin(), _blue.end(), [](Pixel pp) { return pp > 0; });
         return red || green || blue;
     }
+#endif
 
     void fill(Pixel red, Pixel green, Pixel blue) {
         fill(ColorRGB(red, green, blue));

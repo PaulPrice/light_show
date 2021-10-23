@@ -12,16 +12,17 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -Og")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 include(CheckIncludeFile)
-CHECK_INCLUDE_FILE(/opt/vc/include/bcm_host.h RASPBERRY_PI)
+CHECK_INCLUDE_FILE(bcm_host.h RASPBERRY_PI "-I/opt/vc/include/")
 if(RASPBERRY_PI)
     set(BUILD_SHARED ON CACHE BOOL "enable shared library")
     set(BUILD_TEST OFF CACHE BOOL "disable test")
     add_subdirectory(rpi_ws281x)
 endif(RASPBERRY_PI)
 
-find_package(pybind11 CONFIG REQUIRED)
 find_package(Boost)
-find_package(eigen3)
+find_package(Eigen3)
+
+add_subdirectory(pybind11)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(SYSTEM
@@ -29,10 +30,6 @@ include_directories(SYSTEM
                     ${Boost_INCLUDE_DIR}
                     ${EIGEN3_INCLUDE_DIRS}
                     )
-
-option(NDARRAY_FFTW "Enable FFTW tests in ndarray?" OFF)
-option(NDARRAY_PYBIND11 "Enable Pybind11 tests in ndarray?" ON)
-add_subdirectory(ndarray)
 
 foreach(PYMOD LedController colors LedStrip ConcatenatedArrays LedStripSet)
     pybind11_add_module(${PYMOD} SHARED python/light_show/${PYMOD}.cc)

@@ -3,6 +3,9 @@
 
 #include <string>
 #include <stdexcept>
+
+#include "ndarray_fwd.h"
+
 #include "light_show/config.h"
 #include "light_show/indexing.h"
 #include "light_show/LedStrip.h"

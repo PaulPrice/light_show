@@ -31,7 +31,7 @@ const char * ws2811_get_return_t_str(const ws2811_return_t) {
     return "ws2811: error message";
 }
 
-#endif  // BCMHOST
+#endif  // RASPBERRY_PI
 
 
 namespace light_show {

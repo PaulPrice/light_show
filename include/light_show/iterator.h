@@ -1,35 +1,45 @@
 #ifndef LIGHT_SHOW_ITERATOR_H
 #define LIGHT_SHOW_ITERATOR_H
 
+#include <iterator>
+
 namespace light_show {
 
 template <typename ContainerT, typename ValueT, typename ReferenceT, typename IndexT>
-struct Iterator {
+struct IndexBasedIterator {
     using iterator_category = std::random_access_iterator_tag;
     using difference_type = IndexT;
     using value_type = ValueT;
     using reference = ReferenceT;
 
-    Iterator(ContainerT & container_, int index_) : container(container_), index(index_) {}
-    ~Iterator() {}
-    Iterator(Iterator const&) = default;
-    Iterator(Iterator &&) = default;
-    Iterator & operator=(Iterator const&) = default;
-    Iterator & operator=(Iterator &&) = default;
+    IndexBasedIterator(ContainerT & container_, int index_) : container(container_), index(index_) {}
+    ~IndexBasedIterator() {}
+    IndexBasedIterator(IndexBasedIterator const&) = default;
+    IndexBasedIterator(IndexBasedIterator &&) = default;
+    IndexBasedIterator & operator=(IndexBasedIterator const&) = default;
+    IndexBasedIterator & operator=(IndexBasedIterator &&) = default;
 
     reference operator*() const { return container[index]; }
 
-    Iterator& operator++() { ++index; return *this; }
-    Iterator operator++(int) { Iterator tmp = *this; ++index; return tmp; }
-    Iterator operator+(difference_type offset) const { return Iterator(container, index + offset); }
-    Iterator& operator+=(difference_type offset) { index += offset; return *this; }
-    Iterator& operator--() { --index; return *this; }
-    Iterator operator--(int) { Iterator tmp = *this; --index; return tmp; }
-    Iterator operator-(difference_type offset) const { return Iterator(container, index - offset); }
-    Iterator& operator-=(difference_type offset) { index -= offset; return *this; }
+    IndexBasedIterator& operator++() { ++index; return *this; }
+    IndexBasedIterator operator++(int) { IndexBasedIterator tmp = *this; ++index; return tmp; }
+    IndexBasedIterator operator+(difference_type offset) const {
+        return IndexBasedIterator(container, index + offset);
+    }
+    IndexBasedIterator& operator+=(difference_type offset) { index += offset; return *this; }
+    IndexBasedIterator& operator--() { --index; return *this; }
+    IndexBasedIterator operator--(int) { IndexBasedIterator tmp = *this; --index; return tmp; }
+    IndexBasedIterator operator-(difference_type offset) const {
+        return IndexBasedIterator(container, index - offset);
+    }
+    IndexBasedIterator& operator-=(difference_type offset) { index -= offset; return *this; }
 
-    friend bool operator==(const Iterator& a, const Iterator& b) { return a.index == b.index; };
-    friend bool operator!=(const Iterator& a, const Iterator& b) { return a.index != b.index; };
+    friend bool operator==(const IndexBasedIterator& a, const IndexBasedIterator& b) {
+        return a.index == b.index;
+    };
+    friend bool operator!=(const IndexBasedIterator& a, const IndexBasedIterator& b) {
+        return a.index != b.index;
+    };
 
     ContainerT & container;
     IndexT index;

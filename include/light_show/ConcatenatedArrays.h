@@ -4,6 +4,7 @@
 #include <utility>
 #include <exception>
 #include <numeric>
+#include <iterator>
 
 #include "ndarray.h"
 
@@ -19,9 +20,10 @@ class ConcatenatedArrays {
     template <typename ParentT, typename ValueT, typename ReferenceT, typename IndexT>
     class Iterator {
       public:
-        using iterator_category = std::random_access_iterator_tag;
+        using iterator_category = std::bidirectional_iterator_tag;
         using difference_type = IndexT;
         using value_type = ValueT;
+        using pointer = ValueT*;
         using reference = ReferenceT;
 
         // We use two indices to track which array and which pixel in that array is in view.
@@ -38,6 +40,7 @@ class ConcatenatedArrays {
         Iterator & operator=(Iterator &&) = default;
 
         reference operator*() const { return _parent._arrays[_array][_pixel]; }
+        pointer operator->() const { return &_parent._arrays[_array][_pixel]; }
 
         Iterator& operator++() {
             ++_pixel;
