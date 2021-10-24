@@ -30,7 +30,6 @@ ws2811_return_t ws2811_wait(ws2811_t *) {
 const char * ws2811_get_return_t_str(const ws2811_return_t) {
     return "ws2811: error message";
 }
-
 #endif  // RASPBERRY_PI
 
 

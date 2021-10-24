@@ -52,6 +52,7 @@ void declareColorHSV(py::module &mod) {
     cls.def(py::init<ColorHSV>());
     cls.def("set", py::overload_cast<ColorRGB const&>(&ColorHSV::operator=), "rgb"_a);
     cls.def("set", py::overload_cast<ColorHSV const&>(&ColorHSV::operator=), "other"_a);
+    cls.def("toRGB", &ColorHSV::toRGB);
     cls.def_readwrite("hue", &ColorHSV::hue);
     cls.def_readwrite("saturation", &ColorHSV::saturation);
     cls.def_readwrite("sat", &ColorHSV::saturation);

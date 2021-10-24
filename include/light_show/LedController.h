@@ -119,6 +119,8 @@ class LedController final {
         _controller.channel[index].invert = 0;
         _controller.channel[index].brightness = 255;
         _controller.channel[index].strip_type = type;
+        _controller.channel[index].leds = nullptr;
+        _controller.channel[index].gamma = nullptr;
     }
 
     void _start(int numChannels) {

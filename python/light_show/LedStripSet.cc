@@ -37,6 +37,7 @@ void declareLedStripSet(py::module &mod) {
     cls.def("isOn", &LedStripSet::isOn);
     cls.def("fill", py::overload_cast<Pixel, Pixel, Pixel>(&LedStripSet::fill));
     cls.def("fill", py::overload_cast<ColorRGB const&>(&LedStripSet::fill));
+    cls.def("fill", [](LedStripSet & self, ColorHSV const& hsv) { self.fill(hsv); });
     cls.def("clear", &LedStripSet::clear);
     cls.def("brightness", &LedStripSet::brightness);
     cls.def("getHSV", py::overload_cast<LedStripSet::Index>(&LedStripSet::getHSV, py::const_));
