@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include "ndarray_fwd.h"
 
 #include "pybind11/pybind11.h"
 
@@ -29,6 +30,14 @@ void setFromSlice(LHS & self, py::slice const& slice, RHS const& rhs) {
     auto const end = self.begin() + stop;
     for (auto iter = self.begin() + start; iter != end; iter += step) {
         *iter = rhs;
+    }
+}
+
+
+template <typename LHS, typename RHS>
+void setFromIndexArray(LHS & self, ndarray::Array<typename LHS::Index, 1, 1> const& indices, RHS const& rhs) {
+    for (auto index : indices) {
+        self[index] = rhs;
     }
 }
 

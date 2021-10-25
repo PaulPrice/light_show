@@ -28,10 +28,9 @@ void declareLedStripSet(py::module &mod) {
     cls.def("__setitem__", setFromSlice<LedStripSet, ColorRGB>);
     cls.def("__setitem__", setFromSlice<LedStripSet, ColorRGBRef>);
     cls.def("__setitem__", setFromSlice<LedStripSet, ColorHSV>);
-    cls.def("get", py::overload_cast<LedStripSet::Index>(&LedStripSet::get));
-    cls.def("set", py::overload_cast<LedStripSet::Index, ColorRGB const&>(&LedStripSet::set));
-    cls.def("set", py::overload_cast<LedStripSet::Index, ColorHSV const&>(&LedStripSet::set));
-    cls.def("set", py::overload_cast<LedStripSet::Index, Pixel, Pixel, Pixel>(&LedStripSet::set));
+    cls.def("__setitem__", setFromIndexArray<LedStripSet, ColorRGB>, "indices"_a, "rhs"_a);
+    cls.def("__setitem__", setFromIndexArray<LedStripSet, ColorRGBRef>, "indices"_a, "rhs"_a);
+    cls.def("__setitem__", setFromIndexArray<LedStripSet, ColorHSV>, "indices"_a, "rhs"_a);
     cls.def("__len__", &LedStripSet::size);
     cls.def("size", &LedStripSet::size);
     cls.def("isOn", &LedStripSet::isOn);

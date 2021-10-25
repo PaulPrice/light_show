@@ -66,6 +66,7 @@ void declareConcatenatedArrays(py::module &mod, const char* suffix) {
     cls.def("__setitem__", [](Class & self, py::slice const& slice, Class const& other) {
         getSlice(self, slice) = other;
     });
+    cls.def("__setitem__", setFromIndexArray<Class, T>, "indices"_a, "rhs"_a);
     cls.def("__setitem__",
             [](Class & self, ndarray::Array<typename Class::Index, 1, 1> const& indices,
                typename Class::Array::Shallow const& rhs) {
