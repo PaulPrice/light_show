@@ -72,6 +72,10 @@ class LedController final {
     }
 
     ~LedController() {
+        for (int ii = 0; ii < size(); ++ii) {
+            _channels[ii].clear();
+        }
+        render();
         ws2811_fini(&_controller);
     }
 
