@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4...3.18)
+cmake_minimum_required(VERSION 3.4)
 project(light_show VERSION 0.0.0 LANGUAGES C CXX)
 
 
@@ -32,14 +32,16 @@ include_directories(SYSTEM
                     ${EIGEN3_INCLUDE_DIRS}
                     )
 
-foreach(PYMOD LedController colors LedStrip ConcatenatedArrays LedStripSet)
-    pybind11_add_module(${PYMOD} SHARED python/light_show/${PYMOD}.cc)
-    target_link_libraries(${PYMOD} PUBLIC pybind11::module)
-    set_target_properties(${PYMOD} PROPERTIES PREFIX "" SUFFIX ".so")
-    install(TARGETS ${PYMOD} COMPONENT PYTHON LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/python/light_show)
-endforeach()
+set(PYMOD "light_show")
+
+file(GLOB PYMOD_SRC src/*.cc python/light_show/*.cc)
+pybind11_add_module(${PYMOD} SHARED ${PYMOD_SRC})
+set_target_properties(${PYMOD} PROPERTIES PREFIX "" SUFFIX ".so")
+target_link_libraries(${PYMOD} PRIVATE ${LIB})
+install(TARGETS ${PYMOD} COMPONENT PYTHON LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/python/light_show)
+
 if(RASPBERRY_PI)
-    target_link_libraries(LedController PRIVATE ws2811)
+    target_link_libraries(${PYMOD} PRIVATE ws2811)
 endif(RASPBERRY_PI)
 
 include(GNUInstallDirs)
