@@ -41,25 +41,128 @@ pi@raspberrypi:~/Software/rpi_ws281x/build $ cmake -D BUILD_SHARED=ON -D BUILD_T
 pi@raspberrypi:~/Software/rpi_ws281x/build $ make
 
 
+Here's a different base library for driving the LEDs, allowing many more:
+https://iosoft.blog/2020/09/29/raspberry-pi-multi-channel-ws2812/
+https://github.com/jbentham/rpi
+
+Alexa integration:
+https://www.hackster.io/nishit-patel/controlling-raspberry-pi-using-alexa-33715b
+https://tutorials-raspberrypi.com/develop-your-own-raspberry-pi-alexa-skill-and-control-pi-remotely/
+
+
 Install some prereqs:
 
-pi@raspberrypi:~ $ pip3 install --user pybind11
-pi@raspberrypi:~ $ apt-get install fftw boost
-
-Might want to add to PATH: ~/.local/bin
+pi@raspberrypi:~ $ apt-get install fftw boost pybind11
 
 
 Install with cmake:
 
 price@PU-C02F30LBMD6V:~/Software/light_show (price/20211008 *%) $ mkdir build && cd build
-price@PU-C02F30LBMD6V:~/Software/light_show/build (price/20211008 *%) $ pybind11_DIR=$HOME/Library/Python/3.9/lib/python/site-packages/pybind11/share/cmake/pybind11 cmake ..
+price@PU-C02F30LBMD6V:~/Software/light_show/build (price/20211008 *%) $ cmake ..
 price@PU-C02F30LBMD6V:~/Software/light_show/build (price/20211008 *%) $ make install
 
 Install with setup.py:
 
-price@PU-C02F30LBMD6V:~/Software/light_show (price/20211008 *%) $ rm -r install/price@PU-C02F30LBMD6V:~/Software/light_show (price/20211008 *) $ pybind11_DIR=$HOME/Library/Python/3.9/lib/python/site-packages/pybind11/share/cmake/pybind11 python3 setup.py install --prefix=$HOME/Software/light_show/install
+price@PU-C02F30LBMD6V:~/Software/light_show (price/20211008 *) $ python3 setup.py install --prefix=$HOME/Software/light_show/install
 
 
 After either, we can now run it:
 
 price@PU-C02F30LBMD6V:~/Software/light_show (price/20211008 *%) $ PYTHON_PATH+=$HOME/Software/light_show/install python3
+
+
+Testing:
+
+import numpy as np
+from light_show.ConcatenatedArrays import ConcatenatedArrays
+array1 = np.arange(5, dtype=np.uint8)
+array2 = np.arange(7, dtype=np.uint8)
+ca = ConcatenatedArrays([array1, array2])
+ca
+ca[::2]
+ca[1::2]
+ca[:] = np.arange(ca.size, dtype=np.uint8)
+ca[7:-1:3]
+
+
+from light_show import LedStrip, WHITE, ORANGE
+import numpy as np
+num = 13
+red = np.zeros(num, dtype=np.uint8)
+green = np.zeros(num, dtype=np.uint8)
+blue = np.zeros(num, dtype=np.uint8)
+leds = LedStrip(red, green, blue)
+leds[3:9:2] = ORANGE
+
+
+Pins:
+* PWM0: GPIO 12 = pin 32 or GPIO 18 = pin 12
+* PWM1: GPIO 13 = pin 33
+* PCM: GPIO 21 = pin 40
+* SPI: GPIO 10 = pin 19
+* 5V: pins 2 and 4
+* 3.3V: pins 1 and 17
+* GND: pins 6,9,14,25,30,34
+
+PWM requires blacklisting the audio kernel module
+SPI requires changing the SPI buffer size and core frequency.
+
+
+Building on raspberrypi:
+
+pi@raspberrypi:~ $ sudo apt-get install python3-dev python3-pybind11 libboost-all-dev
+
+
+pi@raspberrypi:~/Software $ git clone git@github.com:PaulPrice/light_show.git
+
+pi@raspberrypi:~/Software/light_show $ git submodule init
+pi@raspberrypi:~/Software/light_show $ git submodule update
+
+pi@raspberrypi:~/Software/light_show $ mkdir build ; cd build
+pi@raspberrypi:~/Software/light_show/build $ cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_INSTALL_PREFIX=$HOME/Software/light_show/install ..
+pi@raspberrypi:~/Software/light_show/build $ make install
+
+pi@raspberrypi:~/Software/light_show $ PYTHONPATH=$HOME/Software/light_show/install/python python3
+
+
+Test strip: GRB
+Production strips: RGB
+
+from light_show import *
+controller = LedController(12, 1, StripType.GRB)
+strip = controller[0]
+
+
+pi@raspberrypi:~/Software/light_show $ sudo PYTHONPATH=$HOME/Software/light_show/install/python python3 bin/blinky.py 1
+
+
+from light_show import *
+import numpy as np
+controller = LedController(12, 30, StripType.RGB)
+strip = controller[0]
+strip.setHSV(np.linspace(0, 1.0, len(strip), False, dtype=np.float32), np.ones(len(strip), dtype=np.float32), np.ones(len(strip), dtype=np.float32))
+controller.render()
+
+
+Installing pi-hole:
+
+Set router to assign 192.168.0.8 to raspberrypi (based on wlan0 ID), and set DNS to 192.168.0.8.
+
+curl -sSL https://install.pi-hole.net | bash
+
+Upstream DNS: 208.67.222.123, 208.67.220.123
+"""
+View the web interface at http://pi.hole/admin or
+http://192.168.0.8/admin
+Your Admin Webpage login password is AdUoXDX1
+"""
+
+# Samsung TV ads:
+pihole -b samsungads.com events.samsungads.com config.samsungads.com static.doubleclick.net tvx.adgrx.com samsungotn.net samsungrm.net samsung.net/ads gpm.samsungqbe.com log-config.samsungacr.com samsungacr.com samsungcloudsolution.com samsungcloudsolution.net
+
+# LG TV ads:
+pihole -b ngfts.lge.com us.ad.lgsmartad.com us.info.lgsmartad.com lgad.cjpowercast.com edgesuite.net ad.lgappstv.com smartclip.com smartclip.net smartshare.lgtvsdp.com us.ibs.lgappstv.com us.lgtvsdp.com us.rdx2.lgtvsdp.com yumenetworks.com aic-ngfts.lge.com
+
+# Roku ads:
+pihole -b cooper.logs.roku.com track.sr.roku.com p.ads.roku.com bif.sr.roku.com traces.sr.roku.com cloudservices.roku.com scribe.logs.roku.com amarillo.sb.roku.com
+
