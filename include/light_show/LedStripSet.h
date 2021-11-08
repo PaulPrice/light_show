@@ -140,6 +140,8 @@ class LedStripSet final {
         return ColorRGBRef(_red[index], _green[index], _blue[index]);
     }
 
+    LedStripSet slice(Index start, Index stop, Index step);
+
     bool isOn() const;
 
     void fill(Pixel red, Pixel green, Pixel blue) {

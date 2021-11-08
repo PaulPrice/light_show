@@ -23,6 +23,7 @@ void declareLedStrip(py::module &mod) {
     cls.def_property("green", py::overload_cast<>(&LedStrip::getGreen), &LedStrip::setGreen);
     cls.def_property("blue", py::overload_cast<>(&LedStrip::getBlue), &LedStrip::setBlue);
     cls.def("__getitem__", py::overload_cast<LedStrip::Index>(&LedStrip::operator[]));
+    cls.def("__getitem__", getFromSlice<LedStrip>);
     cls.def("__setitem__", py::overload_cast<LedStrip::Index, ColorRGB const&>(&LedStrip::set));
     cls.def("__setitem__", py::overload_cast<LedStrip::Index, ColorHSV const&>(&LedStrip::set));
     cls.def("__setitem__", py::overload_cast<LedStrip::Index, Pixel, Pixel, Pixel>(&LedStrip::set));

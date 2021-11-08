@@ -34,6 +34,19 @@ void setFromSlice(LHS & self, py::slice const& slice, RHS const& rhs) {
 }
 
 
+template <typename T>
+T getFromSlice(T & self, py::slice const& slice) {
+    typename T::Index start, stop, step, size;
+    if (!slice.compute(self.size(), &start, &stop, &step, &size)) {
+        throw std::length_error("Unable to compute slice");
+    }
+    if (size == typename T::Index(self.size())) {
+        return self;
+    }
+    return self.slice(start, stop, step);
+}
+
+
 template <typename LHS, typename RHS>
 void setFromIndexArray(LHS & self, ndarray::Array<typename LHS::Index, 1, 1> const& indices, RHS const& rhs) {
     for (auto index : indices) {

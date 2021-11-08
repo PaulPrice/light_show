@@ -2,7 +2,7 @@
 
 namespace light_show {
 
-LedStrip::LedStrip(Array & red, Array & green, Array & blue)
+LedStrip::LedStrip(Array && red, Array && green, Array && blue)
   : _num(red.size()),
     _blue(blue),
     _green(green),
@@ -22,6 +22,15 @@ LedStrip::LedStrip(Size num, ColorPixel * data
     _green = ndarray::external(pixels + 1, shape, stride);
     _red = ndarray::external(pixels + 2, shape, stride);
     clear();
+}
+
+
+LedStrip LedStrip::slice(Index start, Index stop, Index step) {
+    return LedStrip(
+        _red[ndarray::view(start, stop, step)],
+        _green[ndarray::view(start, stop, step)],
+        _blue[ndarray::view(start, stop, step)]
+    );
 }
 
 

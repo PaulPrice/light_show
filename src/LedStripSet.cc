@@ -32,6 +32,25 @@ LedStripSet::LedStripSet(Collection & strips)
     }
 
 
+LedStripSet LedStripSet::slice(Index start, Index stop, Index step) {
+    Collection strips;
+    strips.reserve(_numStrips);
+    for (Size ii = 0; ii < _numStrips; ++ii) {
+        LedStrip & ss = _strips[ii];
+        Index const size = ss.size();
+        if (start < size) {
+            strips.emplace_back(ss.slice(start, std::min(stop, Index(ss.size())), step));
+        }
+        start -= size;
+        if (start < 0) {
+            break;
+        }
+        stop -= size;
+    }
+    return LedStripSet(strips);
+}
+
+
 bool LedStripSet::isOn() const {
     bool const red = std::any_of(_red.begin(), _red.end(), [](Pixel pp) { return pp > 0; });
     bool const green = std::any_of(_green.begin(), _green.end(), [](Pixel pp) { return pp > 0; });

@@ -25,19 +25,6 @@ namespace {
 
 
 template <typename T>
-ConcatenatedArraysRef<T> getSlice(ConcatenatedArraysRef<T> & arrays, py::slice const& slice) {
-    typename ConcatenatedArraysRef<T>::Index start, stop, step, size;
-    if (!slice.compute(arrays.size(), &start, &stop, &step, &size)) {
-        throw std::length_error("Unable to compute slice");
-    }
-    if (size == typename ConcatenatedArraysRef<T>::Index(arrays.size())) {
-        return arrays;
-    }
-    return arrays.slice(start, stop, step);
-}
-
-
-template <typename T>
 void declareConcatenatedArrays(py::module &mod, const char* suffix) {
     using Class = ConcatenatedArraysRef<T>;  // Everything is writable in python
     py::class_<Class> cls(mod, (std::string("ConcatenatedArrays") + suffix).c_str());
@@ -52,19 +39,17 @@ void declareConcatenatedArrays(py::module &mod, const char* suffix) {
         }), "arrays"_a);
     cls.def("__len__", &Class::size);
     cls.def("__getitem__", [](Class & self, typename Class::Index index) { return self[index]; });
-    cls.def("__getitem__", [](Class & self, py::slice const& slice) { return getSlice(self, slice); });
+    cls.def("__getitem__", getFromSlice<Class>);
     cls.def("__getitem__",
             py::overload_cast<ndarray::Array<typename Class::Index, 1, 1> const&>(&Class::operator[]),
             "indices"_a);
     cls.def("__setitem__", [](Class & self, typename Class::Index index, T scalar) { self[index] = scalar; });
-    cls.def("__setitem__", [](Class & self, py::slice const& slice, T scalar) {
-        getSlice(self, slice) = scalar;
-    });
+    cls.def("__setitem__", setFromSlice<Class, T>, "slice"_a, "scalar"_a);
     cls.def("__setitem__", [](Class & self, py::slice const& slice, ndarray::Array<T, 1, 0> const& array) {
-        getSlice(self, slice) = array.deep();
+        getFromSlice(self, slice) = array.deep();
     });
     cls.def("__setitem__", [](Class & self, py::slice const& slice, Class const& other) {
-        getSlice(self, slice) = other;
+        getFromSlice(self, slice) = other;
     });
     cls.def("__setitem__", setFromIndexArray<Class, T>, "indices"_a, "rhs"_a);
     cls.def("__setitem__",

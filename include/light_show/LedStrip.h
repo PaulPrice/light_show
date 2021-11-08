@@ -2,6 +2,7 @@
 #define LIGHT_SHOW_LEDSTRIP_H
 
 #include <limits>
+#include <utility>
 
 #include "ndarray.h"
 #include "ndarray/Vector.h"
@@ -22,7 +23,10 @@ class LedStrip final {
     using iterator = IndexBasedIterator<LedStrip, ColorRGB, ColorRGBRef, int>;
     using const_iterator = IndexBasedIterator<LedStrip const, ColorRGB const, ColorRGBRef const, int>;
 
-    LedStrip(Array & red, Array & green, Array & blue);
+    LedStrip(Array && red, Array && green, Array && blue);
+
+    LedStrip(Array & red, Array & green, Array & blue)
+      : LedStrip(Array(red), Array(green), Array(blue)) {}
 
     LedStrip(Size num, ColorPixel * data);
 
@@ -67,6 +71,8 @@ class LedStrip final {
         index = checkIndex(index, _num);
         return ColorRGBRef(_red[index], _green[index], _blue[index]);
     }
+
+    LedStrip slice(Index start, Index stop, Index step);
 
     bool isOn() const;
 

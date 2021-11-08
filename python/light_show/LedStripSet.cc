@@ -22,6 +22,7 @@ void declareLedStripSet(py::module &mod) {
     cls.def_property("green", py::overload_cast<>(&LedStripSet::getGreen), &LedStripSet::setGreen);
     cls.def_property("blue", py::overload_cast<>(&LedStripSet::getBlue), &LedStripSet::setBlue);
     cls.def("__getitem__", py::overload_cast<LedStripSet::Index>(&LedStripSet::operator[]));
+    cls.def("__getitem__", getFromSlice<LedStripSet>);
     cls.def("__setitem__", py::overload_cast<LedStripSet::Index, ColorRGB const&>(&LedStripSet::set));
     cls.def("__setitem__", py::overload_cast<LedStripSet::Index, ColorHSV const&>(&LedStripSet::set));
     cls.def("__setitem__", py::overload_cast<LedStripSet::Index, Pixel, Pixel, Pixel>(&LedStripSet::set));
@@ -32,6 +33,8 @@ void declareLedStripSet(py::module &mod) {
     cls.def("__setitem__", setFromIndexArray<LedStripSet, ColorRGBRef>, "indices"_a, "rhs"_a);
     cls.def("__setitem__", setFromIndexArray<LedStripSet, ColorHSV>, "indices"_a, "rhs"_a);
     cls.def("__len__", &LedStripSet::size);
+    cls.def("__iter__", [](LedStripSet & self) { return py::make_iterator(self.begin(), self.end()); },
+            py::keep_alive<0, 1>());
     cls.def("size", &LedStripSet::size);
     cls.def("isOn", &LedStripSet::isOn);
     cls.def("fill", py::overload_cast<Pixel, Pixel, Pixel>(&LedStripSet::fill));
