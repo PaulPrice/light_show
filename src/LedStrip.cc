@@ -2,12 +2,12 @@
 
 namespace light_show {
 
-LedStrip::LedStrip(Array && red, Array && green, Array && blue)
+LedStrip::LedStrip(Array red, Array green, Array blue)
   : _num(red.size()),
-    _blue(blue),
-    _green(green),
-    _red(red) {
-        if (green.size() != _num || blue.size() != _num) {
+    _blue(std::move(blue)),
+    _green(std::move(green)),
+    _red(std::move(red)) {
+        if (_green.size() != _num || _blue.size() != _num) {
             throw std::length_error("Size mismatch");
         }
     }
@@ -39,6 +39,27 @@ bool LedStrip::isOn() const {
     bool const green = std::any_of(_green.begin(), _green.end(), [](Pixel pp) { return pp > 0; });
     bool const blue = std::any_of(_blue.begin(), _blue.end(), [](Pixel pp) { return pp > 0; });
     return red || green || blue;
+}
+
+
+void LedStrip::left(Size num, ColorRGB const& fillColor) {
+    if (num >= _num) {
+        fill(fillColor);
+        return;
+    }
+    std::copy(cbegin() + num, cend(), begin());
+    std::fill(end() - num, end(), fillColor);
+}
+
+
+void LedStrip::right(Size num, ColorRGB const& fillColor) {
+    if (num >= _num) {
+        fill(fillColor);
+        return;
+    }
+    std::copy(std::make_reverse_iterator(cend() - num), std::make_reverse_iterator(cbegin()),
+              std::make_reverse_iterator(end()));
+    std::fill(begin(), begin() + num, fillColor);
 }
 
 

@@ -7,9 +7,10 @@ namespace light_show {
 
 template <typename ContainerT, typename ValueT, typename ReferenceT, typename IndexT>
 struct IndexBasedIterator {
-    using iterator_category = std::random_access_iterator_tag;
+    using iterator_category = std::bidirectional_iterator_tag;
     using difference_type = IndexT;
     using value_type = ValueT;
+    using pointer = ValueT*;
     using reference = ReferenceT;
 
     IndexBasedIterator(ContainerT & container_, int index_) : container(container_), index(index_) {}
@@ -20,6 +21,7 @@ struct IndexBasedIterator {
     IndexBasedIterator & operator=(IndexBasedIterator &&) = default;
 
     reference operator*() const { return container[index]; }
+    pointer operator->() const { return &container[index]; }
 
     IndexBasedIterator& operator++() { ++index; return *this; }
     IndexBasedIterator operator++(int) { IndexBasedIterator tmp = *this; ++index; return tmp; }

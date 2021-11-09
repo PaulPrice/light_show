@@ -17,7 +17,8 @@ namespace {
 
 void declareLedStripSet(py::module &mod) {
     py::class_<LedStripSet> cls(mod, "LedStripSet");
-    cls.def(py::init<LedStripSet::Collection&>(), "strips"_a);
+    cls.def(py::init<LedStripSet::Collection>(), "strips"_a);
+    cls.def(py::init<std::vector<LedStripSet> const&>(), "stripSets"_a);
     cls.def_property("red", py::overload_cast<>(&LedStripSet::getRed), &LedStripSet::setRed);
     cls.def_property("green", py::overload_cast<>(&LedStripSet::getGreen), &LedStripSet::setGreen);
     cls.def_property("blue", py::overload_cast<>(&LedStripSet::getBlue), &LedStripSet::setBlue);
@@ -41,6 +42,8 @@ void declareLedStripSet(py::module &mod) {
     cls.def("fill", py::overload_cast<ColorRGB const&>(&LedStripSet::fill));
     cls.def("fill", [](LedStripSet & self, ColorHSV const& hsv) { self.fill(hsv); });
     cls.def("clear", &LedStripSet::clear);
+    cls.def("left", &LedStripSet::left);
+    cls.def("right", &LedStripSet::right);
     cls.def("brightness", &LedStripSet::brightness);
     cls.def("getHSV", py::overload_cast<LedStripSet::Index>(&LedStripSet::getHSV, py::const_));
     cls.def("getHSV", py::overload_cast<>(&LedStripSet::getHSV, py::const_));

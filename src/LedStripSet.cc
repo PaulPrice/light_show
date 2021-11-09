@@ -12,24 +12,43 @@ auto transform(Container const& container, UnaryFunction func) {
     return result;
 }
 
+
+LedStripSet::Collection extractStrips(std::vector<LedStripSet> const& stripSets) {
+    std::size_t const num = std::accumulate(
+        stripSets.begin(), stripSets.end(), 0UL,
+        [](std::size_t num, LedStripSet const& ss) { return num + ss.size(); });
+    LedStripSet::Collection strips;
+    strips.reserve(num);
+    for (auto const& ss : stripSets) {
+        auto const tt = ss.getStrips();
+        strips.insert(strips.end(), tt.begin(), tt.end());
+    }
+    return strips;
+}
+
+
 }  // anonymous namespace
 
 
-LedStripSet::LedStripSet(Collection & strips)
-  : _strips(strips),
-    _numPixels(std::accumulate(strips.begin(), strips.end(), 0UL,
+LedStripSet::LedStripSet(Collection strips)
+  : _strips(std::move(strips)),
+    _numPixels(std::accumulate(_strips.begin(), _strips.end(), 0UL,
                                 [](std::size_t num, auto const& ss) { return num + ss.size(); })),
-    _numStrips(strips.size()),
-    _red(transform(strips, [](LedStrip const& strip) {
+    _numStrips(_strips.size()),
+    _red(transform(_strips, [](LedStrip const& strip) {
         return Array::Array(strip.getRed().deep()); })),
-    _green(transform(strips, [&](LedStrip const& strip) {
+    _green(transform(_strips, [&](LedStrip const& strip) {
         return Array::Array(strip.getGreen().deep()); })),
-    _blue(transform(strips, [&](LedStrip const& strip) {
+    _blue(transform(_strips, [&](LedStrip const& strip) {
         return Array::Array(strip.getBlue().deep()); })) {
         if (strips.size() == 0) {
             throw std::runtime_error("No strips provided");
         }
     }
+
+
+LedStripSet::LedStripSet(std::vector<LedStripSet> const& stripSets)
+  : LedStripSet(LedStripSet::Collection(extractStrips(stripSets))) {}
 
 
 LedStripSet LedStripSet::slice(Index start, Index stop, Index step) {
@@ -56,6 +75,27 @@ bool LedStripSet::isOn() const {
     bool const green = std::any_of(_green.begin(), _green.end(), [](Pixel pp) { return pp > 0; });
     bool const blue = std::any_of(_blue.begin(), _blue.end(), [](Pixel pp) { return pp > 0; });
     return red || green || blue;
+}
+
+
+void LedStripSet::left(Size num, ColorRGB const& fillColor) {
+    if (num >= _numPixels) {
+        fill(fillColor);
+        return;
+    }
+    std::copy(cbegin() + num, cend(), begin());
+    std::fill(end() - num, end(), fillColor);
+}
+
+
+void LedStripSet::right(Size num, ColorRGB const& fillColor) {
+    if (num >= _numPixels) {
+        fill(fillColor);
+        return;
+    }
+    std::copy(std::make_reverse_iterator(cend() - num), std::make_reverse_iterator(cbegin()),
+              std::make_reverse_iterator(end()));
+    std::fill(begin(), begin() + num, fillColor);
 }
 
 

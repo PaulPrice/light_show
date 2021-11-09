@@ -20,14 +20,10 @@ class LedStrip final {
     using Size = std::size_t;
     using Index = std::ptrdiff_t;
     using Array = ndarray::Array<Pixel, 1, 0>;
-    using iterator = IndexBasedIterator<LedStrip, ColorRGB, ColorRGBRef, int>;
-    using const_iterator = IndexBasedIterator<LedStrip const, ColorRGB const, ColorRGBRef const, int>;
+    using iterator = IndexBasedIterator<LedStrip, ColorRGB, ColorRGBRef, Index>;
+    using const_iterator = IndexBasedIterator<LedStrip const, ColorRGB const, ColorRGB const, Index>;
 
-    LedStrip(Array && red, Array && green, Array && blue);
-
-    LedStrip(Array & red, Array & green, Array & blue)
-      : LedStrip(Array(red), Array(green), Array(blue)) {}
-
+    LedStrip(Array red, Array green, Array blue);
     LedStrip(Size num, ColorPixel * data);
 
     ~LedStrip() {}
@@ -40,6 +36,8 @@ class LedStrip final {
     const_iterator begin() const { return const_iterator(*this, 0); }
     iterator end() { return iterator(*this, _num); }
     const_iterator end() const { return const_iterator(*this, _num); }
+    const_iterator cbegin() const { return const_iterator(*this, 0); }
+    const_iterator cend() const { return const_iterator(*this, _num); }
 
     ColorRGB get(Index index) const { return operator[](index); }
     ColorRGBRef get(Index index) { return operator[](index); }
@@ -88,6 +86,9 @@ class LedStrip final {
     void clear() {
         fill(0, 0, 0);
     }
+
+    void left(Size num, ColorRGB const& fill=BLACK);
+    void right(Size num, ColorRGB const& fill=BLACK);
 
     ndarray::Array<float, 1, 1> brightness() const;
 

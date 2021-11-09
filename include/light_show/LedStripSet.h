@@ -21,10 +21,11 @@ class LedStripSetIterator {
     using iterator_category = std::bidirectional_iterator_tag;
     using difference_type = typename ArrayIterator::difference_type;
     using value_type = ColorRGB;
+    using pointer = ReferenceT*;
     using reference = ReferenceT;
 
     LedStripSetIterator(ArrayIterator red, ArrayIterator green, ArrayIterator blue)
-        : _red(red), _green(green), _blue(blue) {}
+        : _red(red), _green(green), _blue(blue), _color(*red, *green, *blue) {}
 
     LedStripSetIterator(LedStripSetIterator const&) = default;
     LedStripSetIterator(LedStripSetIterator &&) = default;
@@ -32,6 +33,7 @@ class LedStripSetIterator {
     LedStripSetIterator & operator=(LedStripSetIterator &&) = default;
 
     reference operator*() const { return ReferenceT(*_red, *_green, *_blue); }
+    pointer operator->() const { _color = ReferenceT(*_red, *_green, *_blue); return &_color; }
 
     LedStripSetIterator& operator++() {
         ++_red;
@@ -77,6 +79,7 @@ class LedStripSetIterator {
     ArrayIterator _red;
     ArrayIterator _green;
     ArrayIterator _blue;
+    ReferenceT _color;
 };
 
 
@@ -96,7 +99,8 @@ class LedStripSet final {
     using iterator = detail::LedStripSetIterator<Array::iterator, ColorRGBRef>;
     using const_iterator = detail::LedStripSetIterator<Array::const_iterator, ColorRGB>;
 
-    LedStripSet(Collection & strips);
+    LedStripSet(Collection strips);
+    LedStripSet(std::vector<LedStripSet> const& stripSets);
 
     ~LedStripSet() {}
     LedStripSet(LedStripSet const&) = default;
@@ -108,6 +112,8 @@ class LedStripSet final {
     const_iterator begin() const { return const_iterator(_red.begin(), _green.begin(), _blue.begin()); }
     iterator end() { return iterator(_red.end(), _green.end(), _blue.end()); }
     const_iterator end() const { return const_iterator(_red.end(), _green.end(), _blue.end()); }
+    const_iterator cbegin() const { return const_iterator(_red.begin(), _green.begin(), _blue.begin()); }
+    const_iterator cend() const { return const_iterator(_red.end(), _green.end(), _blue.end()); }
 
     ColorRGB get(Index index) const { return operator[](index); }
     ColorRGBRef get(Index index) { return operator[](index); }
@@ -157,6 +163,9 @@ class LedStripSet final {
         fill(0, 0, 0);
     }
 
+    void left(Size num, ColorRGB const& fill=BLACK);
+    void right(Size num, ColorRGB const& fill=BLACK);
+
     ndarray::Array<float, 1, 1> brightness() const;
 
     // HSV
@@ -168,6 +177,9 @@ class LedStripSet final {
         ndarray::Array<float, 1, 1> const& saturation,
         ndarray::Array<float, 1, 1> const& value
     );
+
+    Collection& getStrips() { return _strips; }
+    Collection getStrips() const { return _strips; }
 
   private:
     Collection _strips;

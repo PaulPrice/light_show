@@ -54,13 +54,13 @@ ConcatenatedArraysIterator<ParentT, ValueT>::operator-=(difference_type offset) 
 
 
 template <typename T>
-ConcatenatedArrays<T>::ConcatenatedArrays(Container && arrays)
-  : _arrays(arrays),
-    _numPixels(std::accumulate(arrays.begin(), arrays.end(), 0UL,
+ConcatenatedArrays<T>::ConcatenatedArrays(Container arrays)
+  : _arrays(std::move(arrays)),
+    _numPixels(std::accumulate(_arrays.begin(), _arrays.end(), 0UL,
                                 [](Index num, auto const& arr) { return num + arr.size(); })),
-    _numArrays(arrays.size()),
-    _cumulativeCounts(ndarray::allocate(arrays.size())) {
-        if (arrays.size() == 0) {
+    _numArrays(_arrays.size()),
+    _cumulativeCounts(ndarray::allocate(_numArrays)) {
+        if (_numArrays == 0) {
             throw std::runtime_error("No arrays provided");
         }
         Index count = 0;

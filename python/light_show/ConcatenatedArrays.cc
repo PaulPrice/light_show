@@ -35,7 +35,7 @@ void declareConcatenatedArrays(py::module &mod, const char* suffix) {
             for (auto & arr : arrays) {
                 container.emplace_back(arr.deep());
             }
-            return Class(std::move(container));
+            return Class(container);
         }), "arrays"_a);
     cls.def("__len__", &Class::size);
     cls.def("__getitem__", [](Class & self, typename Class::Index index) { return self[index]; });

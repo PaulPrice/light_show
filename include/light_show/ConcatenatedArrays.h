@@ -95,7 +95,7 @@ class ConcatenatedArrays {
     friend iterator;
     friend const_iterator;
 
-    explicit ConcatenatedArrays(Container && arrays);
+    explicit ConcatenatedArrays(Container arrays);
 
     ~ConcatenatedArrays() {}
     ConcatenatedArrays(ConcatenatedArrays const&) = default;
@@ -147,7 +147,7 @@ template <typename T>
 class ConcatenatedArraysRef : public ConcatenatedArrays<T> {
   public:
     explicit ConcatenatedArraysRef(ConcatenatedArrays<T> const& other) : ConcatenatedArrays<T>(other) {}
-    explicit ConcatenatedArraysRef(typename ConcatenatedArrays<T>::Container && arrays)
+    explicit ConcatenatedArraysRef(typename ConcatenatedArrays<T>::Container arrays)
       : ConcatenatedArrays<T>(std::move(arrays)) {}
 
     ~ConcatenatedArraysRef() {}
