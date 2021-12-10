@@ -8,7 +8,7 @@ template <typename ParentT, typename ValueT>
 ConcatenatedArraysIterator<ParentT, ValueT>&
 ConcatenatedArraysIterator<ParentT, ValueT>::operator++() {
     ++_pixel;
-    if (_pixel >= Index(_parent._arrays[_array].size())) {
+    if (_pixel >= typename ParentT::Index(_parent._arrays[_array].size())) {
         ++_array;
         _pixel = 0;
     }
@@ -151,8 +151,11 @@ ConcatenatedArrays<T>::getIndices(Index index) const {
 
 
 #define INSTANTIATE(TYPE) \
-template <> class ConcatenatedArrays<TYPE>; \
-template <> class ConcatenatedArraysRef<TYPE>;
+template class ConcatenatedArrays<TYPE>; \
+template class ConcatenatedArraysRef<TYPE>; \
+template class detail::ConcatenatedArraysIterator<ConcatenatedArrays<TYPE>, TYPE>; \
+template class detail::ConcatenatedArraysIterator<ConcatenatedArrays<TYPE> const, TYPE const>; \
+template std::ostream& operator<<(std::ostream&, ConcatenatedArrays<TYPE> const&);
 
 INSTANTIATE(Pixel);
 

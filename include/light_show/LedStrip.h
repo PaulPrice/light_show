@@ -87,8 +87,9 @@ class LedStrip final {
         fill(0, 0, 0);
     }
 
-    void left(Size num, ColorRGB const& fill=BLACK);
-    void right(Size num, ColorRGB const& fill=BLACK);
+    void shift(Index offset, ColorRGB const& fill=BLACK);
+    void left(Size num=1, ColorRGB const& fill=BLACK) { shift(num, fill); }
+    void right(Size num=1, ColorRGB const& fill=BLACK) { shift(num*-1, fill); }
 
     ndarray::Array<float, 1, 1> brightness() const;
 

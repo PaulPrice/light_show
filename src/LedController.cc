@@ -1,5 +1,50 @@
 #include "light_show/LedController.h"
 
+
+
+#ifndef RASPBERRY_PI
+// Dummy replacements for the controller
+#define RPI_PWM_CHANNELS 2
+
+ws2811_return_t ws2811_init(ws2811_t *controller) {
+    std::cerr << "ws2811: Initializing" << std::endl;
+    for (std::size_t ii = 0; ii < RPI_PWM_CHANNELS; ++ii) {
+        std::size_t const num = controller->channel[ii].count;
+        if (num > 0) {
+            std::cerr << "Allocating " << num << " pixels for channel " << ii << std::endl;
+            controller->channel[ii].leds = reinterpret_cast<light_show::ColorPixel *>(
+                new light_show::Pixel[4*controller->channel[ii].count]);
+        }
+    }
+    return WS2811_SUCCESS;
+}
+
+void ws2811_fini(ws2811_t *controller) {
+    std::cerr << "ws2811: finalizing" << std::endl;
+    for (std::size_t ii = 0; ii < RPI_PWM_CHANNELS; ++ii) {
+        if (controller->channel[ii].count > 0) {
+            delete[] controller->channel[ii].leds;
+        }
+    }
+}
+
+ws2811_return_t ws2811_render(ws2811_t *) {
+    std::cerr << "ws2811: rendering" << std::endl;
+    return WS2811_SUCCESS;
+}
+
+ws2811_return_t ws2811_wait(ws2811_t *) {
+    std::cerr << "ws2811: waiting" << std::endl;
+    return WS2811_SUCCESS;
+}
+
+const char * ws2811_get_return_t_str(const ws2811_return_t) {
+    return "ws2811: error message";
+}
+
+#endif  // RASPBERRY_PI
+
+
 namespace light_show {
 
 

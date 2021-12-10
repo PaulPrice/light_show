@@ -15,7 +15,7 @@ class HueChange:
             tree.fill(color)
             color.hue += hueShift
             if color.hue > 1.0:
-                color.hue -= 0.0
+                color.hue -= 1.0
             yield
 
 

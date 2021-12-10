@@ -42,24 +42,19 @@ bool LedStrip::isOn() const {
 }
 
 
-void LedStrip::left(Size num, ColorRGB const& fillColor) {
-    if (num >= _num) {
+void LedStrip::shift(Index num, ColorRGB const& fillColor) {
+    if (Size(std::abs(num)) >= _num) {
         fill(fillColor);
         return;
     }
-    std::copy(cbegin() + num, cend(), begin());
-    std::fill(end() - num, end(), fillColor);
-}
-
-
-void LedStrip::right(Size num, ColorRGB const& fillColor) {
-    if (num >= _num) {
-        fill(fillColor);
-        return;
+    if (num > 0) {
+        std::copy(cbegin() + num, cend(), begin());
+        std::fill(end() - num, end(), fillColor);
+    } else if (num < 0) {
+        std::copy(std::make_reverse_iterator(cend() + num), std::make_reverse_iterator(cbegin()),
+                std::make_reverse_iterator(end()));
+        std::fill(begin(), begin() - num, fillColor);
     }
-    std::copy(std::make_reverse_iterator(cend() - num), std::make_reverse_iterator(cbegin()),
-              std::make_reverse_iterator(end()));
-    std::fill(begin(), begin() + num, fillColor);
 }
 
 

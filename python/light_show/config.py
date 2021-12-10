@@ -1,7 +1,4 @@
-try:
-    import ujson as json  # Because pickle might need too much memory
-except ImportError:
-    import json
+import json
 
 __all__ = ("Field", "Config")
 
@@ -64,6 +61,3 @@ class Config(dict):
 
     def toHtml(self):
         return sum((field.toHtml(name) for name, field in self._fields.items()), "")
-
-
-

@@ -120,7 +120,7 @@ class ConcatenatedArrays {
     ConcatenatedArrays<T> shallow() const {
         return ConcatenatedArrays<T>(*this);
     }
-    ConcatenatedArraysRef<T> deep() const {
+    ConcatenatedArraysRef<T> deep() {
         return ConcatenatedArraysRef<T>(*this);
     }
     explicit operator Array() const;

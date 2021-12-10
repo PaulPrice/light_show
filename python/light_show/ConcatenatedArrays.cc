@@ -76,7 +76,7 @@ void declareConcatenatedArrays(py::module &mod, const char* suffix) {
 
 
 PYBIND11_MODULE(ConcatenatedArrays, mod) {
-    declareConcatenatedArrays<Pixel>(mod, "");
+    declareConcatenatedArrays<Pixel>(mod, "P");
 }
 
 }  // anonymous namespace

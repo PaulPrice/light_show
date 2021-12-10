@@ -11,28 +11,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 
-#ifndef RASPBERRY_PI
-ws2811_return_t ws2811_init(ws2811_t *) {
-    std::cerr << "ws2811: Initializing" << std::endl;
-    return WS2811_SUCCESS;
-}
-void ws2811_fini(ws2811_t *) {
-    std::cerr << "ws2811: finalizing" << std::endl;
-}
-ws2811_return_t ws2811_render(ws2811_t *) {
-    std::cerr << "ws2811: rendering" << std::endl;
-    return WS2811_SUCCESS;
-}
-ws2811_return_t ws2811_wait(ws2811_t *) {
-    std::cerr << "ws2811: waiting" << std::endl;
-    return WS2811_SUCCESS;
-}
-const char * ws2811_get_return_t_str(const ws2811_return_t) {
-    return "ws2811: error message";
-}
-#endif  // RASPBERRY_PI
-
-
 namespace light_show {
 
 namespace {

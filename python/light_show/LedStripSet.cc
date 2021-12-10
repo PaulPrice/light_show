@@ -42,8 +42,8 @@ void declareLedStripSet(py::module &mod) {
     cls.def("fill", py::overload_cast<ColorRGB const&>(&LedStripSet::fill));
     cls.def("fill", [](LedStripSet & self, ColorHSV const& hsv) { self.fill(hsv); });
     cls.def("clear", &LedStripSet::clear);
-    cls.def("left", &LedStripSet::left);
-    cls.def("right", &LedStripSet::right);
+    cls.def("left", &LedStripSet::left, "num"_a=1, "fill"_a=BLACK);
+    cls.def("right", &LedStripSet::right, "num"_a=1, "fill"_a=BLACK);
     cls.def("brightness", &LedStripSet::brightness);
     cls.def("getHSV", py::overload_cast<LedStripSet::Index>(&LedStripSet::getHSV, py::const_));
     cls.def("getHSV", py::overload_cast<>(&LedStripSet::getHSV, py::const_));
@@ -57,6 +57,7 @@ void declareLedStripSet(py::module &mod) {
 
 
 PYBIND11_MODULE(LedStripSet, mod) {
+    py::module_::import("light_show.ConcatenatedArrays");
     declareLedStripSet(mod);
 }
 

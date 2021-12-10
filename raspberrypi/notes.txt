@@ -133,6 +133,23 @@ controller = LedController(12, 1, StripType.GRB)
 strip = controller[0]
 
 
+Garage arch is 345 cm on either side --> 207 LEDs
+Patterns to implement:
+* Rainbow or Knight Rider bouncing left to right
+* Solid color with a few pixels sparkling
+* Trails going down
+* Sprinkle down
+
+Done:
+* Random fill
+* Rainbow cycle: fill with a rainbow, increment hue
+* Build up, fall off
+* Build left, fall left, build right, fall right
+* Chase left, chase right
+
+
+
+
 pi@raspberrypi:~/Software/light_show $ sudo PYTHONPATH=$HOME/Software/light_show/install/python python3 bin/blinky.py 1
 
 

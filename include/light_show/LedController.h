@@ -66,6 +66,7 @@ class LedController final {
     }
 
     LedStripSet getAll() {
+        std::cerr << "Getting all " << _channels.size() << " channels" << std::endl;
         return LedStripSet(_channels);
     }
 

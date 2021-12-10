@@ -39,6 +39,7 @@ struct ColorRGB {
 
 struct ColorRGBRef {
     ColorRGBRef(Pixel& red_, Pixel& green_, Pixel& blue_) : red(red_), green(green_), blue(blue_) {}
+    ColorRGBRef(ColorRGB & color) : red(color.red), green(color.green), blue(color.blue) {}
     ColorRGBRef& operator=(ColorRGB const& other) {
         red = other.red;
         green = other.green;
@@ -98,8 +99,6 @@ struct ColorHSV {
     float saturation;
     float value;
 };
-
-
 
 
 }  // namespace light_show

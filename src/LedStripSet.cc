@@ -41,7 +41,7 @@ LedStripSet::LedStripSet(Collection strips)
         return Array::Array(strip.getGreen().deep()); })),
     _blue(transform(_strips, [&](LedStrip const& strip) {
         return Array::Array(strip.getBlue().deep()); })) {
-        if (strips.size() == 0) {
+        if (_strips.size() == 0) {
             throw std::runtime_error("No strips provided");
         }
     }

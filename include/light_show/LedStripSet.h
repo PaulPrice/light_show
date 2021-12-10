@@ -25,7 +25,7 @@ class LedStripSetIterator {
     using reference = ReferenceT;
 
     LedStripSetIterator(ArrayIterator red, ArrayIterator green, ArrayIterator blue)
-        : _red(red), _green(green), _blue(blue), _color(*red, *green, *blue) {}
+        : _red(red), _green(green), _blue(blue), _color(BLACK) {}
 
     LedStripSetIterator(LedStripSetIterator const&) = default;
     LedStripSetIterator(LedStripSetIterator &&) = default;
@@ -79,7 +79,7 @@ class LedStripSetIterator {
     ArrayIterator _red;
     ArrayIterator _green;
     ArrayIterator _blue;
-    ReferenceT _color;
+    ColorRGB _color;
 };
 
 
@@ -92,6 +92,7 @@ class LedStripSet final {
     using Index = std::ptrdiff_t;
     using Collection = std::vector<LedStrip>;
     using Array = ConcatenatedArrays<Pixel>;
+    using ArrayRef = ConcatenatedArraysRef<Pixel>;
 
   private:
 
@@ -117,11 +118,11 @@ class LedStripSet final {
 
     ColorRGB get(Index index) const { return operator[](index); }
     ColorRGBRef get(Index index) { return operator[](index); }
-    Array & getRed() { return _red; }
+    ArrayRef getRed() { return _red.deep(); }
     Array const& getRed() const { return _red; }
-    Array & getGreen() { return _green; }
+    ArrayRef getGreen() { return _green.deep(); }
     Array const& getGreen() const { return _green; }
-    Array & getBlue() { return _blue; }
+    ArrayRef getBlue() { return _blue.deep(); }
     Array const& getBlue() const { return _blue; }
 
     void set(Index index, ColorRGB const& rgb) { operator[](index) = rgb; }
@@ -163,8 +164,9 @@ class LedStripSet final {
         fill(0, 0, 0);
     }
 
-    void left(Size num, ColorRGB const& fill=BLACK);
-    void right(Size num, ColorRGB const& fill=BLACK);
+    void shift(Index num, ColorRGB const& fill=BLACK);
+    void left(Size num=1, ColorRGB const& fill=BLACK);
+    void right(Size num=1, ColorRGB const& fill=BLACK);
 
     ndarray::Array<float, 1, 1> brightness() const;
 
