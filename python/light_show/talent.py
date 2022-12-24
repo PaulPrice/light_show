@@ -24,7 +24,7 @@ def register(cls: Type[Perf], **config: Config):
     _performances[name] = (cls, config)
 
 
-def getPerformanceNames() -> set[str]:
+def getPerformanceNames() -> set:
     return set(_performances.keys()) - _disabled
 
 

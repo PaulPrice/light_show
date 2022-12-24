@@ -50,7 +50,7 @@ class Show:
             self.plot()
             plt.pause(pause)
         else:
-            self._controller.render()
+            self._display.render()
             time.sleep(pause)
 
     def __del__(self):

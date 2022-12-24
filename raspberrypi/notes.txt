@@ -1,7 +1,7 @@
 Use "Raspberry Pi Imager" application to write a Raspbian image.
 
 price@PU-C02F30LBMD6V:/Volumes/boot $ touch ssh
-price@PU-C02F30LBMD6V:/Volumes/boot $ cp ~/Software/HolidayLights/raspberrypi/wpa_supplicant.conf .
+price@PU-C02F30LBMD6V:/Volumes/boot $ cp ~/Software/light_show/raspberrypi/wpa_supplicant.conf .
 
 Start the RPi.
 
@@ -27,10 +27,13 @@ pip3 install --user rpi_ws281x
 
 I don't want to use that python wrapper.
 
-Get important build tools:
+Get important build tools and pre-reqs:
 
 pi@raspberrypi:~/Software $ sudo apt-get update
-pi@raspberrypi:~/Software $ sudo apt-get install scons cmake
+pi@raspberrypi:~/Software $ sudo apt-get install scons cmake git aptitude build-essential g++ python-dev python3-dev autotools-dev libbz2-dev libboost-all-dev libeigen3-dev python3-pip python3-numpy
+pi@raspberrypi:~/Software $ pip3 install numpy
+
+
 
 Build the base LED driver to make sure there's no issues:
 
@@ -49,10 +52,6 @@ Alexa integration:
 https://www.hackster.io/nishit-patel/controlling-raspberry-pi-using-alexa-33715b
 https://tutorials-raspberrypi.com/develop-your-own-raspberry-pi-alexa-skill-and-control-pi-remotely/
 
-
-Install some prereqs:
-
-pi@raspberrypi:~ $ apt-get install fftw boost pybind11
 
 
 Install with cmake:
@@ -134,11 +133,21 @@ strip = controller[0]
 
 
 Garage arch is 345 cm on either side --> 207 LEDs
+Removed one LED either side for space for wires.
+Removed one LED either side for soldering problems.
+--> 410 LEDs
+
+Looks like we're going to get about 20 frames per second.
+
 Patterns to implement:
 * Rainbow or Knight Rider bouncing left to right
 * Solid color with a few pixels sparkling
 * Trails going down
 * Sprinkle down
+
+* Trails chasing (10 pixels long from bright to faded out, 100 pixel gap between trails)
+* Random colors, turn down saturation until everything is white, turn up saturation to new colors
+
 
 Done:
 * Random fill
@@ -148,6 +157,23 @@ Done:
 * Chase left, chase right
 
 
+Notes:
+* BuildLeftRight needs multiple in-flight (5?)
+* SolidBuild needs multiple in-flight (3?)
+
+
+RS485:
+* https://electronics.stackexchange.com/questions/153500/correctly-using-re-and-de-with-rs485
+* http://pskillenrules.blogspot.com/2009/08/arduino-and-rs485.html
+* DE: driver enable = pull high to transmit
+* RE: receiver enable = pull low to receiver
+* DI: driver in (transmit data)
+* RO: receiver out (receive data)
+* VCC: 5V
+* GND: Ground
+* A: connect to A on other module
+* B: connect to B on other module
+* MUST tie RE and DE together
 
 
 pi@raspberrypi:~/Software/light_show $ sudo PYTHONPATH=$HOME/Software/light_show/install/python python3 bin/blinky.py 1
@@ -155,7 +181,7 @@ pi@raspberrypi:~/Software/light_show $ sudo PYTHONPATH=$HOME/Software/light_show
 
 from light_show import *
 import numpy as np
-controller = LedController(12, 30, StripType.RGB)
+controller = LedController(12, 410, StripType.RGB)
 strip = controller[0]
 strip.setHSV(np.linspace(0, 1.0, len(strip), False, dtype=np.float32), np.ones(len(strip), dtype=np.float32), np.ones(len(strip), dtype=np.float32))
 controller.render()
@@ -163,15 +189,15 @@ controller.render()
 
 Installing pi-hole:
 
-Set router to assign 192.168.0.8 to raspberrypi (based on wlan0 ID), and set DNS to 192.168.0.8.
+Set router to assign 192.168.1.5 to raspberrypi (based on eth0 ID), and set DNS to 192.168.1.5.
 
 curl -sSL https://install.pi-hole.net | bash
 
 Upstream DNS: 208.67.222.123, 208.67.220.123
 """
 View the web interface at http://pi.hole/admin or
-http://192.168.0.8/admin
-Your Admin Webpage login password is AdUoXDX1
+http://192.168.1.5/admin
+Your Admin Webpage login password is hwP16H7L
 """
 
 # Samsung TV ads:
@@ -183,3 +209,66 @@ pihole -b ngfts.lge.com us.ad.lgsmartad.com us.info.lgsmartad.com lgad.cjpowerca
 # Roku ads:
 pihole -b cooper.logs.roku.com track.sr.roku.com p.ads.roku.com bif.sr.roku.com traces.sr.roku.com cloudservices.roku.com scribe.logs.roku.com amarillo.sb.roku.com
 
+# Whitelist ParamountPlus
+pihole -w ads.play.cbsi.video cbsinteractive.hb.omtrdc.net pubads.g.doubleclick.net scribe.logs.roku.com
+
+
+Easy way to start script after booting: put it in /etc/rc.local
+
+
+MAX485: https://protosupplies.com/product/max485-ttl-to-rs-485-interface-module/
+
+
+
+
+
+
+import RPi.GPIO as GPIO           # import RPi.GPIO module  
+GPIO.setmode(GPIO.BCM)            # choose BCM or BOARD  
+GPIO.setup(port_or_pin, GPIO.OUT) # set a port/pin as an output   
+GPIO.output(port_or_pin, 1)       # set port/pin value to 1/GPIO.HIGH/True  
+GPIO.output(port_or_pin, 0)       # set port/pin value to 0/GPIO.LOW/False  
+
+
+
+410 LEDs, 60 LEDs per metre, 18 W per metre --> 6.83 metres, 123 Watts, so 10 Amps @ 12 V.
+18 AWG wire @ 12 Volts 
+
+
+
+
+
+
+
+
+from light_show import *
+import numpy as np
+controller = LedController(18, 400, StripType.GRB)
+strip = controller[0]
+strip.fill(RED)
+controller.render()
+
+
+strip.setHSV(np.linspace(0, 1.0, len(strip), False, dtype=np.float32), np.ones(len(strip), dtype=np.float32), np.ones(len(strip), dtype=np.float32))
+
+
+
+
+
+
+from light_show import *
+controller = LedController(18, 10, StripType.RGB)
+controller[0].fill(GREEN)
+controller.render()
+
+
+409 lights!
+
+0 is the bottom of the left.
+203 is the top of the left.
+204 is the top of the right.
+408 is the bottom of the right.
+
+
+
+price@PU-C02F30LBMD6V:~/Software/light_show/build (price/20211008 *%=) $ cmake -DCMAKE_BUILD_TYPE=debug -DPYTHON_VERSION=3.10 -DCMAKE_INSTALL_PREFIX=$HOME/Software/light_show/install ..

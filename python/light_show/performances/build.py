@@ -49,12 +49,13 @@ class SolidBuild(Performance):
 
 
 class BuildLeftRight(Performance):
-    def __init__(self, pause):
+    def __init__(self, pause, gap):
         self.pause = pause
+        self.gap = gap
 
     @classmethod
     def defaults(cls) -> Config:
-        return dict(pause=0.01)
+        return dict(pause=0.1, gap=50)
 
     def __call__(self, display: LedDisplay) -> Iterator[float]:
         length = len(display)

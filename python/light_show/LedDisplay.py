@@ -1,9 +1,8 @@
 __all__ = ("LedDisplay",)
 
-from typing import Iterable
+from typing import Iterable, Any
 
 import numpy as np
-from numpy.typing import ArrayLike
 
 from .LedStripSet import LedStripSet
 from .LedController import LedController
@@ -20,7 +19,7 @@ __all__ = ("LedDisplay",)
 
 class LedDisplay:
     def __init__(self, controller: LedController, groups: Iterable[slice],
-                 reversed: Iterable[bool], xyz: ArrayLike, strip: Iterable[slice]):
+                 reversed: Iterable[bool], xyz: Any, strip: Iterable[slice]):
         self.controller = controller
         self.pixels = controller.getAll()
         self.groups = [self.pixels[ss] for ss in groups]
