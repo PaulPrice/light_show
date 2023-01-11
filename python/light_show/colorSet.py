@@ -1,14 +1,15 @@
-from typing import Iterator, Union
+from typing import Iterator, List, Union
 from itertools import cycle
 
 import numpy as np
 
 from .colors import ColorRGB, ColorRGBRef, ColorHSV
+from .colors import WHITE, RED, GREEN, BLUE
 
 Color = Union[ColorRGB, ColorRGBRef, ColorHSV]
 ColorGenerator = Iterator[Color]
 
-__all__ = ("RandomHSV", "Rainbow", "Christmas")
+__all__ = ("RandomHSV", "Rainbow", "Christmas", "NewYear")
 
 
 class RandomHSV:
@@ -39,16 +40,23 @@ class Rainbow:
         return color
 
 
-class Christmas:
-    def __init__(self) -> None:
-        self.colors = [
-            ColorRGB(255, 0, 0),
-            ColorRGB(0, 255, 0),
-        ]
+class CycleColors:
+    def __init__(self, colors: List[Color]) -> None:
+        self.colors = colors
         self._iter = cycle(self.colors)
 
-    def __iter__(self) -> "Christmas":
+    def __iter__(self) -> "CycleColors":
         return self
 
-    def __next__(self) -> ColorRGB:
+    def __next__(self) -> Color:
         return next(self._iter)
+
+
+class Christmas(CycleColors):
+    def __init__(self) -> None:
+        super().__init__([RED, GREEN])
+
+
+class NewYear(CycleColors):
+    def __init__(self) -> None:
+        super().__init__([WHITE, BLUE])
